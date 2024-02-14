@@ -4,6 +4,7 @@
   "version": "0.0.1",
   "description": "browser extension template",
   "author": "yuta-nishi",
+  "homepage": "https://github.com/yuta-nishi/url-copy",
   "scripts": {
     "dev": "plasmo dev",
     "build": "plasmo build",
@@ -53,6 +54,22 @@
   "manifest": {
     "host_permissions": [
       "https://*/*"
-    ]
+    ],
+    "permissions": [
+      "activeTab",
+      "clipboardWrite",
+      "commands",
+      "contextMenus"
+    ],
+    "options_ui": {
+      "open_in_tab": false
+    },
+    "commands": {
+      "_execute_action": {
+        "suggested_key": {
+          "default": "Ctrl+Shift+C"
+        }
+      }
+    }
   }
 }
