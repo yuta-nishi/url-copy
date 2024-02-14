@@ -1,24 +1,22 @@
-import cssText from 'data-text:~/style.css';
 import type { PlasmoCSConfig } from 'plasmo';
-
-import { CountButton } from '~/components/CountButton';
 
 export const config: PlasmoCSConfig = {
   matches: ['<all_urls>'],
 };
 
-export const getStyle = () => {
-  const style = document.createElement('style');
-  style.textContent = cssText;
-  return style;
-};
-
-const PlasmoOverlay = () => {
-  return (
-    <div className="fixed right-32 top-32 z-50 flex">
-      <CountButton />
-    </div>
-  );
-};
-
-export default PlasmoOverlay;
+navigator.permissions.query({ name: 'clipboard-write' as PermissionName }).then((res) => {
+  if (res.state === 'granted' || res.state === 'prompt') {
+    chrome.runtime.onMessage.addListener((message, _sender, _sendResponse) => {
+      if (message.type === 'copy') {
+        navigator.clipboard.writeText(message.text).then(
+          () => {
+            console.log('copied');
+          },
+          () => {
+            console.error('failed to copy');
+          },
+        );
+      }
+    });
+  }
+});
