@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
-import { Button } from '~/components/ui/button';
+import { Icons } from '~/components/icons';
+import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert';
 import '~/style.css';
 
 const Options = () => {
@@ -15,24 +16,35 @@ const Options = () => {
     });
   }, []);
 
-  // TODO: add styling
   return (
-    <div className="flex h-screen items-center justify-center">
+    <>
       {missingShortcuts.length > 0 ? (
-        <>
-          <p>ショートカットが競合しています</p>
-          <Button
-            onClick={() => {
-              chrome.tabs.create({ url: 'chrome://extensions/shortcuts' });
-            }}
-          >
-            settings
-          </Button>
-        </>
+        <Alert>
+          <Icons.alert_circle className="mt-[6px] h-4 w-4" />
+          <AlertTitle>
+            <h1 className="text-lg">Shortcut Conflict!</h1>
+          </AlertTitle>
+          <AlertDescription>
+            Some keyboard shortcuts are in conflict.
+            <button
+              onClick={async () =>
+                await chrome.tabs.create({ url: 'chrome://extensions/shortcuts' })
+              }
+              className="text-blue-500 hover:text-blue-300"
+            >
+              Please review your settings.
+            </button>
+          </AlertDescription>
+        </Alert>
       ) : (
-        <p>ショートカットが競合していません</p>
+        <Alert>
+          <AlertTitle className="flex items-center gap-3">
+            <Icons.check_circle className="h-4 w-4"></Icons.check_circle>
+            <h1 className="text-lg">No Shortcut Conflict!</h1>
+          </AlertTitle>
+        </Alert>
       )}
-    </div>
+    </>
   );
 };
 

@@ -1,7 +1,6 @@
-import { AlertCircle, AlertOctagon, AlertTriangle } from 'lucide-react';
+import { AlertCircle, CheckCircle2 } from 'lucide-react';
 
 export const Icons = {
   alert_circle: AlertCircle,
-  alert_octagon: AlertOctagon,
-  alert_triangle: AlertTriangle,
+  check_circle: CheckCircle2,
 };
