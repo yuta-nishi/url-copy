@@ -18,6 +18,7 @@
   "dependencies": {
     "@plasmohq/messaging": "^0.6.2",
     "@plasmohq/storage": "^1.9.3",
+    "@radix-ui/react-slot": "^1.0.2",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "lucide-react": "^0.325.0",
@@ -41,7 +42,7 @@
     "eslint": "^8.56.0",
     "eslint-plugin-react": "^7.33.2",
     "happy-dom": "^13.3.8",
-    "husky": "^9.0.10",
+    "husky": "^9.0.11",
     "jsdom": "^24.0.0",
     "postcss": "^8.4.35",
     "prettier": "3.2.5",
@@ -59,7 +60,8 @@
       "activeTab",
       "clipboardWrite",
       "commands",
-      "contextMenus"
+      "contextMenus",
+      "tabs"
     ],
     "options_ui": {
       "open_in_tab": false
