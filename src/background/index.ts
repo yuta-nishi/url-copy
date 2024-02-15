@@ -12,14 +12,15 @@ chrome.runtime.onInstalled.addListener((details) => {
 /**
  * Icon click process
  */
+// TODO: add error handling
 chrome.action.onClicked.addListener(() => {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     const activeTab = tabs[0];
     const url = activeTab?.url || '';
-    const id = activeTab?.id || 0;
+    const tabId = activeTab?.id || 0;
     const message: Message = { type: 'copy', text: url! };
     (async () => {
-      chrome.tabs.sendMessage(id, message);
+      chrome.tabs.sendMessage(tabId, message);
     })();
   });
 });
