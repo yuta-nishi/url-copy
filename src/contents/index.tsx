@@ -26,9 +26,16 @@ const Contents = (): JSX.Element => {
 
   useEffect(() => {
     if (notification) {
-      toast({
-        description: notification,
-      });
+      if (notification === 'Copied Current URL') {
+        toast({
+          description: notification,
+        });
+      } else {
+        toast({
+          description: notification,
+          variant: 'destructive',
+        });
+      }
       setNotification('');
     }
   }, [notification]);
@@ -39,15 +46,18 @@ const Contents = (): JSX.Element => {
       if (res.state === 'granted' || res.state === 'prompt') {
         chrome.runtime.onMessage.addListener(
           (message: Message, _sender, _sendResponse) => {
+            // TODO: add tests for this
             if (message.type === 'copy') {
               navigator.clipboard.writeText(message.text).then(
                 () => {
                   setNotification('Copied Current URL');
                 },
                 () => {
-                  setNotification('Failed to copy');
+                  setNotification('Failed to copy URL');
                 },
               );
+            } else if (message.type === 'error') {
+              setNotification(message.text);
             }
           },
         );
