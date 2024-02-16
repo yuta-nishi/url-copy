@@ -11,6 +11,7 @@
     "package": "plasmo package",
     "test": "vitest run --passWithNoTests",
     "coverage": "vitest run --coverage",
+    "watch": "vitest watch",
     "lint": "eslint 'src/**/*.{ts,tsx}'",
     "fmt": "prettier --write 'src/**/*.{ts,tsx}'",
     "prepare": "husky install"
