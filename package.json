@@ -4,12 +4,14 @@
   "version": "0.0.1",
   "description": "browser extension template",
   "author": "yuta-nishi",
+  "homepage": "https://github.com/yuta-nishi/url-copy",
   "scripts": {
     "dev": "plasmo dev",
     "build": "plasmo build",
     "package": "plasmo package",
     "test": "vitest run --passWithNoTests",
     "coverage": "vitest run --coverage",
+    "watch": "vitest watch",
     "lint": "eslint 'src/**/*.{ts,tsx}'",
     "fmt": "prettier --write 'src/**/*.{ts,tsx}'",
     "prepare": "husky install"
@@ -17,6 +19,8 @@
   "dependencies": {
     "@plasmohq/messaging": "^0.6.2",
     "@plasmohq/storage": "^1.9.3",
+    "@radix-ui/react-slot": "^1.0.2",
+    "@radix-ui/react-toast": "^1.1.5",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "lucide-react": "^0.325.0",
@@ -40,7 +44,7 @@
     "eslint": "^8.56.0",
     "eslint-plugin-react": "^7.33.2",
     "happy-dom": "^13.3.8",
-    "husky": "^9.0.10",
+    "husky": "^9.0.11",
     "jsdom": "^24.0.0",
     "postcss": "^8.4.35",
     "prettier": "3.2.5",
@@ -53,6 +57,23 @@
   "manifest": {
     "host_permissions": [
       "https://*/*"
-    ]
+    ],
+    "permissions": [
+      "activeTab",
+      "clipboardWrite",
+      "commands",
+      "contextMenus",
+      "tabs"
+    ],
+    "options_ui": {
+      "open_in_tab": false
+    },
+    "commands": {
+      "_execute_action": {
+        "suggested_key": {
+          "default": "Ctrl+Shift+C"
+        }
+      }
+    }
   }
 }
