@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { Icons } from '~/components/icons';
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert';
+import { getMissingShortcuts } from '~/lib/utils';
 import '~/style.css';
 
 const Options = () => {
@@ -9,9 +10,7 @@ const Options = () => {
 
   useEffect(() => {
     chrome.commands.getAll((commands) => {
-      const missingShortcuts = commands
-        .filter(({ shortcut }) => shortcut === '')
-        .map(({ name }) => name);
+      const missingShortcuts = getMissingShortcuts(commands);
       setMissingShortcuts(missingShortcuts);
     });
   }, []);

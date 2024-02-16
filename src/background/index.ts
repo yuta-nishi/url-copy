@@ -1,3 +1,4 @@
+import { getMissingShortcuts } from '~/lib/utils';
 import type { Message } from '~/types/message';
 
 chrome.runtime.onInstalled.addListener((details) => {
@@ -61,10 +62,7 @@ chrome.action.onClicked.addListener(() => {
 
 const checkCommandShortcuts = () => {
   chrome.commands.getAll((commands) => {
-    const missingShortcuts = commands
-      .filter(({ shortcut }) => shortcut === '')
-      .map(({ name }) => name);
-
+    const missingShortcuts = getMissingShortcuts(commands);
     if (missingShortcuts.length > 0) {
       chrome.runtime.openOptionsPage();
     }
