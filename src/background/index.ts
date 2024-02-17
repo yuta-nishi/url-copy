@@ -142,7 +142,7 @@ const updateContextMenusSelection = async (selectedItemId?: string) => {
   chrome.contextMenus.update(copyStyleId, { checked: true });
 };
 
-// FIXME: Remove when building for production
+// TODO: Remove when building for production
 storage.watch({
   'copy-style': (c) => {
     console.log(c.newValue);
