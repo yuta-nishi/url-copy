@@ -13,6 +13,8 @@ chrome.runtime.onInstalled.addListener(async (details) => {
         chrome.runtime.openOptionsPage();
       }
     });
+
+    await storage.set('copy-style-id', 'plain-url');
   }
 
   chrome.contextMenus.create({
@@ -53,19 +55,15 @@ chrome.runtime.onInstalled.addListener(async (details) => {
     title: 'Backlog URL',
     contexts: ['all'],
   });
-
-  const data = await storage.get('copy-style');
-  const selectedStyle = data || 'plain-url';
-
-  chrome.contextMenus.update('plain-url', { checked: selectedStyle === 'plain-url' });
-  chrome.contextMenus.update('title-url', { checked: selectedStyle === 'title-url' });
-  chrome.contextMenus.update('markdown-url', {
-    checked: selectedStyle === 'markdown-url',
-  });
-  chrome.contextMenus.update('backlog-url', { checked: selectedStyle === 'backlog-url' });
 });
 
-// chrome.runtime.onStartup.addListener(async () => {});
+chrome.runtime.onStartup.addListener(async () => {
+  try {
+    await updateContextMenusSelection();
+  } catch (e) {
+    console.error('Failed to update context menu selection:', e);
+  }
+});
 
 chrome.action.onClicked.addListener(() => {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -121,17 +119,32 @@ chrome.action.onClicked.addListener(() => {
 });
 
 chrome.contextMenus.onClicked.addListener(async (info, _tab) => {
-  const data = await storage.get('copy-style');
-  if (data === info.menuItemId || !data) {
-    return;
+  if (
+    info.menuItemId === 'plain-url' ||
+    info.menuItemId === 'title-url' ||
+    info.menuItemId === 'markdown-url' ||
+    info.menuItemId === 'backlog-url'
+  ) {
+    try {
+      await updateContextMenusSelection(info.menuItemId);
+      await storage.set('copy-style-id', info.menuItemId);
+    } catch (e) {
+      console.error('Failed to update context menu selection:', e);
+    }
   }
-  chrome.contextMenus.update(data, { checked: false });
-  chrome.contextMenus.update(info.menuItemId, { checked: true });
-  await storage.set('copy-style', info.menuItemId);
 });
 
-// storage.watch({
-//   'copy-style': (c) => {
-//     console.log(c.newValue);
-//   },
-// });
+const updateContextMenusSelection = async (selectedItemId?: string) => {
+  const copyStyleId = (await storage.get<string>('copy-style-id')) || 'plain-url';
+  if (copyStyleId !== selectedItemId && selectedItemId) {
+    chrome.contextMenus.update(selectedItemId, { checked: false });
+  }
+  chrome.contextMenus.update(copyStyleId, { checked: true });
+};
+
+// FIXME: Remove when building for production
+storage.watch({
+  'copy-style': (c) => {
+    console.log(c.newValue);
+  },
+});
