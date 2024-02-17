@@ -1,11 +1,71 @@
+import { Storage } from '@plasmohq/storage';
+
 import { getMissingShortcuts } from '~/lib/utils';
 import type { Message } from '~/types/message';
 
-chrome.runtime.onInstalled.addListener((details) => {
+const storage = new Storage();
+
+chrome.runtime.onInstalled.addListener(async (details) => {
   if (details.reason === chrome.runtime.OnInstalledReason.INSTALL) {
-    checkCommandShortcuts();
+    chrome.commands.getAll((commands) => {
+      const missingShortcuts = getMissingShortcuts(commands);
+      if (missingShortcuts.length > 0) {
+        chrome.runtime.openOptionsPage();
+      }
+    });
   }
+
+  chrome.contextMenus.create({
+    type: 'normal',
+    id: 'copy-style',
+    title: 'Copy Style',
+    contexts: ['all'],
+  });
+
+  chrome.contextMenus.create({
+    parentId: 'copy-style',
+    type: 'checkbox',
+    id: 'plain-url',
+    title: 'Plain URL',
+    contexts: ['all'],
+  });
+
+  chrome.contextMenus.create({
+    parentId: 'copy-style',
+    type: 'checkbox',
+    id: 'title-url',
+    title: 'Title URL',
+    contexts: ['all'],
+  });
+
+  chrome.contextMenus.create({
+    parentId: 'copy-style',
+    type: 'checkbox',
+    id: 'markdown-url',
+    title: 'Markdown URL',
+    contexts: ['all'],
+  });
+
+  chrome.contextMenus.create({
+    parentId: 'copy-style',
+    type: 'checkbox',
+    id: 'backlog-url',
+    title: 'Backlog URL',
+    contexts: ['all'],
+  });
+
+  const data = await storage.get('copy-style');
+  const selectedStyle = data || 'plain-url';
+
+  chrome.contextMenus.update('plain-url', { checked: selectedStyle === 'plain-url' });
+  chrome.contextMenus.update('title-url', { checked: selectedStyle === 'title-url' });
+  chrome.contextMenus.update('markdown-url', {
+    checked: selectedStyle === 'markdown-url',
+  });
+  chrome.contextMenus.update('backlog-url', { checked: selectedStyle === 'backlog-url' });
 });
+
+// chrome.runtime.onStartup.addListener(async () => {});
 
 chrome.action.onClicked.addListener(() => {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -60,11 +120,18 @@ chrome.action.onClicked.addListener(() => {
   });
 });
 
-const checkCommandShortcuts = () => {
-  chrome.commands.getAll((commands) => {
-    const missingShortcuts = getMissingShortcuts(commands);
-    if (missingShortcuts.length > 0) {
-      chrome.runtime.openOptionsPage();
-    }
-  });
-};
+chrome.contextMenus.onClicked.addListener(async (info, _tab) => {
+  const data = await storage.get('copy-style');
+  if (data === info.menuItemId || !data) {
+    return;
+  }
+  chrome.contextMenus.update(data, { checked: false });
+  chrome.contextMenus.update(info.menuItemId, { checked: true });
+  await storage.set('copy-style', info.menuItemId);
+});
+
+// storage.watch({
+//   'copy-style': (c) => {
+//     console.log(c.newValue);
+//   },
+// });

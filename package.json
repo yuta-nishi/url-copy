@@ -63,6 +63,7 @@
       "clipboardWrite",
       "commands",
       "contextMenus",
+      "storage",
       "tabs"
     ],
     "options_ui": {
