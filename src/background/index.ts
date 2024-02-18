@@ -134,7 +134,7 @@ chrome.contextMenus.onClicked.addListener(async (info, _tab) => {
   }
 });
 
-const updateContextMenusSelection = async (selectedItemId?: string) => {
+export const updateContextMenusSelection = async (selectedItemId?: string) => {
   const copyStyleId = (await storage.get<string>('copy-style-id')) || 'plain-url';
   if (copyStyleId !== selectedItemId && selectedItemId) {
     chrome.contextMenus.update(selectedItemId, { checked: false });
