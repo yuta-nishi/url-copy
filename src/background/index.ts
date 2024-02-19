@@ -91,8 +91,32 @@ chrome.action.onClicked.addListener(() => {
 
     (async () => {
       try {
-        const message: Message = { type: 'copy', text: url };
-        await chrome.tabs.sendMessage(tabId, message);
+        const copyStyleId = await storage.get<string>('copy-style-id');
+        switch (copyStyleId) {
+          case 'title-url': {
+            const title = activeTab.title;
+            const message: Message = { type: 'copy', text: `${title} ${url}` };
+            await chrome.tabs.sendMessage(tabId, message);
+            break;
+          }
+          case 'markdown-url': {
+            const title = activeTab.title;
+            const message: Message = { type: 'copy', text: `[${title}](${url})` };
+            await chrome.tabs.sendMessage(tabId, message);
+            break;
+          }
+          case 'backlog-url': {
+            const title = activeTab.title;
+            const message: Message = { type: 'copy', text: `[[${title}>${url}]]` };
+            await chrome.tabs.sendMessage(tabId, message);
+            break;
+          }
+          default: {
+            const message: Message = { type: 'copy', text: url };
+            await chrome.tabs.sendMessage(tabId, message);
+            break;
+          }
+        }
       } catch (e) {
         if (
           e instanceof Error &&
