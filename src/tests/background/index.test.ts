@@ -33,9 +33,6 @@ describe('updateContextMenusSelection', async () => {
     mockGet.mockResolvedValue('plain-url');
 
     await updateContextMenusSelection('plain-url');
-    expect(mockChrome.contextMenus.update).not.toHaveBeenCalledWith('title-url', {
-      checked: false,
-    });
     expect(mockChrome.contextMenus.update).toHaveBeenCalledWith('plain-url', {
       checked: true,
     });
@@ -45,10 +42,10 @@ describe('updateContextMenusSelection', async () => {
     mockGet.mockResolvedValue('plain-url');
 
     await updateContextMenusSelection('title-url');
-    expect(mockChrome.contextMenus.update).toHaveBeenCalledWith('title-url', {
+    expect(mockChrome.contextMenus.update).toHaveBeenCalledWith('plain-url', {
       checked: false,
     });
-    expect(mockChrome.contextMenus.update).toHaveBeenCalledWith('plain-url', {
+    expect(mockChrome.contextMenus.update).toHaveBeenCalledWith('title-url', {
       checked: true,
     });
   });

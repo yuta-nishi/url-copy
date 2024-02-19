@@ -30,6 +30,7 @@ chrome.runtime.onInstalled.addListener(async (details) => {
     id: 'plain-url',
     title: 'Plain URL',
     contexts: ['all'],
+    checked: true,
   });
 
   chrome.contextMenus.create({
@@ -135,16 +136,18 @@ chrome.contextMenus.onClicked.addListener(async (info, _tab) => {
 });
 
 export const updateContextMenusSelection = async (selectedItemId?: string) => {
-  const copyStyleId = (await storage.get<string>('copy-style-id')) || 'plain-url';
-  if (copyStyleId !== selectedItemId && selectedItemId) {
-    chrome.contextMenus.update(selectedItemId, { checked: false });
+  const prevCopyStyleId = (await storage.get<string>('copy-style-id')) || 'plain-url';
+  if (prevCopyStyleId !== selectedItemId && selectedItemId) {
+    chrome.contextMenus.update(prevCopyStyleId, { checked: false });
   }
-  chrome.contextMenus.update(copyStyleId, { checked: true });
+  if (selectedItemId) {
+    chrome.contextMenus.update(selectedItemId, { checked: true });
+  }
 };
 
 // TODO: Remove when building for production
 storage.watch({
-  'copy-style': (c) => {
+  'copy-style-id': (c) => {
     console.log(c.newValue);
   },
 });
