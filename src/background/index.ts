@@ -13,9 +13,9 @@ chrome.runtime.onInstalled.addListener(async (details) => {
         chrome.runtime.openOptionsPage();
       }
     });
-
-    await storage.set('copy-style-id', 'plain-url');
   }
+
+  await storage.set('copy-style-id', 'plain-url');
 
   chrome.contextMenus.create({
     type: 'normal',
@@ -56,14 +56,6 @@ chrome.runtime.onInstalled.addListener(async (details) => {
     title: 'Backlog URL',
     contexts: ['all'],
   });
-});
-
-chrome.runtime.onStartup.addListener(async () => {
-  try {
-    await updateContextMenusSelection();
-  } catch (e) {
-    console.error('Failed to update context menu selection:', e);
-  }
 });
 
 chrome.action.onClicked.addListener(() => {
@@ -135,19 +127,18 @@ chrome.contextMenus.onClicked.addListener(async (info, _tab) => {
   }
 });
 
-export const updateContextMenusSelection = async (selectedItemId?: string) => {
+export const updateContextMenusSelection = async (selectedItemId: string) => {
   const prevCopyStyleId = (await storage.get<string>('copy-style-id')) || 'plain-url';
-  if (prevCopyStyleId !== selectedItemId && selectedItemId) {
+  if (prevCopyStyleId !== selectedItemId) {
     chrome.contextMenus.update(prevCopyStyleId, { checked: false });
   }
-  if (selectedItemId) {
-    chrome.contextMenus.update(selectedItemId, { checked: true });
-  }
+  chrome.contextMenus.update(selectedItemId, { checked: true });
 };
 
 // TODO: Remove when building for production
 storage.watch({
   'copy-style-id': (c) => {
+    console.log(c.oldValue);
     console.log(c.newValue);
   },
 });
