@@ -1,10 +1,61 @@
+import { Storage } from '@plasmohq/storage';
+
 import { getMissingShortcuts } from '~/lib/utils';
 import type { Message } from '~/types/message';
 
-chrome.runtime.onInstalled.addListener((details) => {
+const storage = new Storage();
+
+chrome.runtime.onInstalled.addListener(async (details) => {
   if (details.reason === chrome.runtime.OnInstalledReason.INSTALL) {
-    checkCommandShortcuts();
+    chrome.commands.getAll((commands) => {
+      const missingShortcuts = getMissingShortcuts(commands);
+      if (missingShortcuts.length > 0) {
+        chrome.runtime.openOptionsPage();
+      }
+    });
   }
+
+  await storage.set('copy-style-id', 'plain-url');
+
+  chrome.contextMenus.create({
+    type: 'normal',
+    id: 'copy-style',
+    title: 'Copy Style',
+    contexts: ['all'],
+  });
+
+  chrome.contextMenus.create({
+    parentId: 'copy-style',
+    type: 'checkbox',
+    id: 'plain-url',
+    title: 'Plain URL',
+    contexts: ['all'],
+    checked: true,
+  });
+
+  chrome.contextMenus.create({
+    parentId: 'copy-style',
+    type: 'checkbox',
+    id: 'title-url',
+    title: 'Title URL',
+    contexts: ['all'],
+  });
+
+  chrome.contextMenus.create({
+    parentId: 'copy-style',
+    type: 'checkbox',
+    id: 'markdown-url',
+    title: 'Markdown URL',
+    contexts: ['all'],
+  });
+
+  chrome.contextMenus.create({
+    parentId: 'copy-style',
+    type: 'checkbox',
+    id: 'backlog-url',
+    title: 'Backlog URL',
+    contexts: ['all'],
+  });
 });
 
 chrome.action.onClicked.addListener(() => {
@@ -40,8 +91,32 @@ chrome.action.onClicked.addListener(() => {
 
     (async () => {
       try {
-        const message: Message = { type: 'copy', text: url };
-        await chrome.tabs.sendMessage(tabId, message);
+        const copyStyleId = await storage.get<string>('copy-style-id');
+        switch (copyStyleId) {
+          case 'title-url': {
+            const title = activeTab.title;
+            const message: Message = { type: 'copy', text: `${title} ${url}` };
+            await chrome.tabs.sendMessage(tabId, message);
+            break;
+          }
+          case 'markdown-url': {
+            const title = activeTab.title;
+            const message: Message = { type: 'copy', text: `[${title}](${url})` };
+            await chrome.tabs.sendMessage(tabId, message);
+            break;
+          }
+          case 'backlog-url': {
+            const title = activeTab.title;
+            const message: Message = { type: 'copy', text: `[[${title}>${url}]]` };
+            await chrome.tabs.sendMessage(tabId, message);
+            break;
+          }
+          default: {
+            const message: Message = { type: 'copy', text: url };
+            await chrome.tabs.sendMessage(tabId, message);
+            break;
+          }
+        }
       } catch (e) {
         if (
           e instanceof Error &&
@@ -60,11 +135,34 @@ chrome.action.onClicked.addListener(() => {
   });
 });
 
-const checkCommandShortcuts = () => {
-  chrome.commands.getAll((commands) => {
-    const missingShortcuts = getMissingShortcuts(commands);
-    if (missingShortcuts.length > 0) {
-      chrome.runtime.openOptionsPage();
+chrome.contextMenus.onClicked.addListener(async (info, _tab) => {
+  if (
+    info.menuItemId === 'plain-url' ||
+    info.menuItemId === 'title-url' ||
+    info.menuItemId === 'markdown-url' ||
+    info.menuItemId === 'backlog-url'
+  ) {
+    try {
+      await updateContextMenusSelection(info.menuItemId);
+      await storage.set('copy-style-id', info.menuItemId);
+    } catch (e) {
+      console.error('Failed to update context menu selection:', e);
     }
-  });
+  }
+});
+
+export const updateContextMenusSelection = async (selectedItemId: string) => {
+  const prevCopyStyleId = (await storage.get<string>('copy-style-id')) || 'plain-url';
+  if (prevCopyStyleId !== selectedItemId) {
+    chrome.contextMenus.update(prevCopyStyleId, { checked: false });
+  }
+  chrome.contextMenus.update(selectedItemId, { checked: true });
 };
+
+// TODO: Remove when building for production
+storage.watch({
+  'copy-style-id': (c) => {
+    console.log(c.oldValue);
+    console.log(c.newValue);
+  },
+});

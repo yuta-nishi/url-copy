@@ -8,5 +8,10 @@ export default defineConfig({
     globals: true,
     environment: 'happy-dom',
     setupFiles: './vitest.setup.ts',
+    coverage: {
+      // Note that the path specification method for test.include is different. The following will not work.
+      // exclude: ['./src/components/ui'],
+      exclude: ['src/components/ui'],
+    },
   },
 });
