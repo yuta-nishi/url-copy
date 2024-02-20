@@ -19,7 +19,7 @@ const mockChrome = {
 };
 
 vi.mock('@plasmohq/storage', () => ({
-  Storage: vi.fn(() => ({ get: mockGet, watch: vi.fn() })),
+  Storage: vi.fn(() => ({ get: mockGet })),
 }));
 vi.stubGlobal('chrome', mockChrome);
 
