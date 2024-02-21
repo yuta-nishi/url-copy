@@ -27,4 +27,4 @@ Chrome extension to copy the current URL to the clipboard.
 - Markdown link
 - Backlog link
 
-[demo movie](https://www.youtube.com/watch?v=m7AEzk4cKF0)
+[Demo Video](https://www.youtube.com/watch?v=m7AEzk4cKF0)
