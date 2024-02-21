@@ -10,7 +10,8 @@ export default defineConfig({
     setupFiles: './vitest.setup.ts',
     coverage: {
       // Note that the path specification method for test.include is different. The following will not work.
-      // exclude: ['./src/components/ui'],
+      // include: ['./src/**/*.{ts,tsx}'],
+      include: ['src/**/*.{ts,tsx}'],
       exclude: ['src/components/ui'],
     },
   },

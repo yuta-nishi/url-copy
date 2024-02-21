@@ -1,8 +1,8 @@
 {
-  "name": "extension-template",
-  "displayName": "Extension template",
+  "name": "url-copy",
+  "displayName": "URL Copy",
   "version": "0.0.1",
-  "description": "browser extension template",
+  "description": "__MSG_description__",
   "author": "yuta-nishi",
   "homepage": "https://github.com/yuta-nishi/url-copy",
   "scripts": {
@@ -54,6 +54,7 @@
     "vitest": "^1.3.0"
   },
   "manifest": {
+    "default_locale": "en",
     "host_permissions": [
       "https://*/*"
     ],
@@ -62,8 +63,7 @@
       "clipboardWrite",
       "commands",
       "contextMenus",
-      "storage",
-      "tabs"
+      "storage"
     ],
     "options_ui": {
       "open_in_tab": false
