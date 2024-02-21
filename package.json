@@ -63,8 +63,7 @@
       "clipboardWrite",
       "commands",
       "contextMenus",
-      "storage",
-      "tabs"
+      "storage"
     ],
     "options_ui": {
       "open_in_tab": false
