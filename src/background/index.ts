@@ -60,7 +60,7 @@ chrome.action.onClicked.addListener(() => {
         switch (copyStyleId) {
           case 'title-url': {
             const title = activeTab.title;
-            text = `${title}\n${url}`;
+            text = `${title} ${url}`;
             break;
           }
           case 'markdown-url': {
