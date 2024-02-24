@@ -3,7 +3,8 @@
   <h1 style="color: hsl(, 100%, 50%);">URL Copy</h1>
 </div>
 
-Chrome extension to copy the current URL to the clipboard.
+Chrome extension to copy the current URL to the clipboard. \
+[Chrome Web Store link](https://chromewebstore.google.com/detail/url-copy/khfenepnobebagchdbalmfeafedaljki)
 
 ## Usage
 
