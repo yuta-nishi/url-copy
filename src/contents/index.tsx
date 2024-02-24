@@ -1,10 +1,6 @@
 import type { PlasmoCSConfig, PlasmoGetStyle } from 'plasmo';
 import { useEffect, useState } from 'react';
 
-// Add tailwind css for shadcn/ui components
-// Without this, shadcn/ui components will not be displayed correctly
-import '~/style.css';
-
 import cssText from 'data-text:~/style.css';
 import { Toaster } from '~/components/ui/toaster';
 import { useToast } from '~/components/ui/use-toast';

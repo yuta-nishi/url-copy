@@ -3,17 +3,18 @@
   <h1 style="color: hsl(, 100%, 50%);">URL Copy</h1>
 </div>
 
-Chrome extension to copy the current URL to the clipboard.
+Chrome extension to copy the current URL to the clipboard. \
+[Chrome Web Store link](https://chromewebstore.google.com/detail/url-copy/khfenepnobebagchdbalmfeafedaljki)
 
 ## Usage
 
-- Click the extension icon
-- Use the following shortcut.
+* Click the extension icon
+* Use the following shortcut.
 
 ### Default Shortcut
 
-- Mac: `Cmd+Shift+C`
-- Windows/Linux: `Ctrl+Shift+C`
+* Mac: `Cmd+Shift+C`
+* Windows/Linux: `Ctrl+Shift+C`
 
  If the shortcut is conflicting with an existing one, you will be notified at install time. In that case, please change the shortcut.
  In the case of Google Chrome, `Cmd/Ctrl+Shift+C` is assigned to Inspect Elements, so you need to manually override it.
@@ -22,9 +23,9 @@ Chrome extension to copy the current URL to the clipboard.
 
 ### Copy formats
 
-- Plain URL
-- Title + URL
-- Markdown link
-- Backlog link
+* Plain URL
+* Title + URL
+* Markdown link
+* Backlog link
 
 [Demo Video](https://www.youtube.com/watch?v=m7AEzk4cKF0)

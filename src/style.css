@@ -3,7 +3,8 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
+  /** @see https://github.com/shadcn-ui/ui/issues/1064 */
+  :host {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
 
