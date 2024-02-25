@@ -40,6 +40,17 @@ describe('initializeContextMenus', async () => {
     expect(setMock).toHaveBeenNthCalledWith(3, 'url-decoding', true);
   });
 
+  it('should handle errors when initializing storage', async () => {
+    const error = new Error('Failed to set value');
+    setMock.mockRejectedValue(error);
+
+    const consoleSpy = vi.spyOn(console, 'error');
+
+    await initializeContextMenus();
+
+    expect(consoleSpy).toHaveBeenCalledWith('Failed to initialize storage:', error);
+  });
+
   it('should call chrome.contextMenus.create with correct parameters', async () => {
     await initializeContextMenus();
 
