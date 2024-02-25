@@ -146,3 +146,20 @@ describe('removeParams', async () => {
     expect(removeParams(url)).toBe(url);
   });
 });
+
+describe('decodeUrl', async () => {
+  const { decodeUrl } = await import('~/background');
+
+  it('should decode URL', () => {
+    const url =
+      'https://www.amazon.co.jp/%E3%83%AD%E3%82%B8%E3%82%AF%E3%83%BC%E3%83%AB-M575S-Bluetooth-%E3%83%88%E3%83%A9%E3%83%83%E3%82%AF%E3%83%9C%E3%83%BC%E3%83%AB%E3%83%9E%E3%82%A6%E3%82%B9-%E9%9B%BB%E6%B1%A0%E5%AF%BF%E5%91%BD%E6%9C%80%E5%A4%A724%E3%82%B1%E6%9C%88';
+    const expected =
+      'https://www.amazon.co.jp/ロジクール-M575S-Bluetooth-トラックボールマウス-電池寿命最大24ケ月';
+    expect(decodeUrl(url)).toBe(expected);
+  });
+
+  it('should not modify URL without encoded characters', () => {
+    const url = 'https://www.example.com/page?param=value';
+    expect(decodeUrl(url)).toBe(url);
+  });
+});
