@@ -50,6 +50,12 @@ chrome.action.onClicked.addListener(() => {
       return;
     }
     let url = activeTab.url;
+
+    const isRemoveParams = await storage.get<boolean>('remove-params');
+    if (isRemoveParams) {
+      url = removeParams(url);
+    }
+
     const isUrlDecoding = await storage.get<boolean>('url-decoding');
     if (isUrlDecoding) {
       try {
@@ -116,6 +122,9 @@ chrome.contextMenus.onClicked.addListener(async (info, _tab) => {
     } catch (e) {
       console.error('Failed to update context menu selection:', e);
     }
+  } else if (info.menuItemId === 'remove-params') {
+    const isRemoveParams = await storage.get<boolean>('remove-params');
+    await storage.set('remove-params', !isRemoveParams);
   } else if (info.menuItemId === 'url-decoding') {
     const isUrlDecoding = await storage.get<boolean>('url-decoding');
     await storage.set('url-decoding', !isUrlDecoding);
@@ -124,6 +133,7 @@ chrome.contextMenus.onClicked.addListener(async (info, _tab) => {
 
 const initializeContextMenus = async () => {
   await storage.set('copy-style-id', 'plain-url');
+  await storage.set('remove-params', true);
   await storage.set('url-decoding', true);
 
   chrome.contextMenus.create({
@@ -168,6 +178,14 @@ const initializeContextMenus = async () => {
 
   chrome.contextMenus.create({
     type: 'checkbox',
+    id: 'remove-params',
+    title: 'Remove Params',
+    contexts: ['all'],
+    checked: true,
+  });
+
+  chrome.contextMenus.create({
+    type: 'checkbox',
     id: 'url-decoding',
     title: 'URL Decoding',
     contexts: ['all'],
@@ -181,4 +199,12 @@ export const updateContextMenusSelection = async (selectedItemId: string) => {
     chrome.contextMenus.update(prevCopyStyleId, { checked: false });
   }
   chrome.contextMenus.update(selectedItemId, { checked: true });
+};
+
+const removeParams = (url: string) => {
+  const urlObj = new URL(url);
+  if (urlObj.hostname.includes('amazon.co.jp')) {
+    return `${urlObj.protocol}//${urlObj.hostname}${urlObj.pathname}`;
+  }
+  return url;
 };
