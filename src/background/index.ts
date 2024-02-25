@@ -23,7 +23,7 @@ chrome.runtime.onInstalled.addListener(async (details) => {
 });
 
 chrome.action.onClicked.addListener(() => {
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+  chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
     if (chrome.runtime.lastError) {
       console.error('Failed to query tabs:', chrome.runtime.lastError.message);
       return;
@@ -46,55 +46,60 @@ chrome.action.onClicked.addListener(() => {
         type: 'error',
         text: 'No URL found',
       };
-      (async () => {
-        await chrome.tabs.sendMessage(tabId, errorMessage);
-      })();
+      await chrome.tabs.sendMessage(tabId, errorMessage);
       return;
     }
-    const url = activeTab.url;
-
-    (async () => {
+    let url = activeTab.url;
+    const isUrlDecoding = await storage.get<boolean>('url-decoding');
+    if (isUrlDecoding) {
       try {
-        const copyStyleId = await storage.get<string>('copy-style-id');
-        let text: string;
-        switch (copyStyleId) {
-          case 'title-url': {
-            const title = activeTab.title;
-            text = `${title} ${url}`;
-            break;
-          }
-          case 'markdown-url': {
-            const title = activeTab.title;
-            text = `[${title}](${url})`;
-            break;
-          }
-          case 'backlog-url': {
-            const title = activeTab.title;
-            text = `[${title}>${url}]`;
-            break;
-          }
-          default: {
-            text = url;
-            break;
-          }
-        }
-        const message: Message = { type: 'copy', text };
-        await chrome.tabs.sendMessage(tabId, message);
+        const decodedUrl = decodeURIComponent(url);
+        url = decodedUrl;
       } catch (e) {
-        if (
-          e instanceof Error &&
-          e.message === 'Could not establish connection. Receiving end does not exist.'
-        ) {
-          console.error('url-copy extension cannot run on the current page.');
-        } else if (e instanceof Error) {
-          const errorMessage: Message = {
-            type: 'error',
-            text: e.message,
-          };
-          await chrome.tabs.sendMessage(tabId, errorMessage);
+        console.error('Failed to decode URL:', e);
+      }
+    }
+
+    try {
+      const copyStyleId = await storage.get<string>('copy-style-id');
+      let text: string;
+      switch (copyStyleId) {
+        case 'title-url': {
+          const title = activeTab.title;
+          text = `${title} ${url}`;
+          break;
+        }
+        case 'markdown-url': {
+          const title = activeTab.title;
+          text = `[${title}](${url})`;
+          break;
+        }
+        case 'backlog-url': {
+          const title = activeTab.title;
+          text = `[${title}>${url}]`;
+          break;
+        }
+        default: {
+          text = url;
+          break;
         }
       }
-    })();
+      const message: Message = { type: 'copy', text };
+      await chrome.tabs.sendMessage(tabId, message);
+    } catch (e) {
+      if (
+        e instanceof Error &&
+        e.message === 'Could not establish connection. Receiving end does not exist.'
+      ) {
+        console.error('url-copy extension cannot run on the current page.');
+      } else if (e instanceof Error) {
+        const errorMessage: Message = {
+          type: 'error',
+          text: e.message,
+        };
+        await chrome.tabs.sendMessage(tabId, errorMessage);
+      }
+    }
   });
 });
 
@@ -111,11 +116,15 @@ chrome.contextMenus.onClicked.addListener(async (info, _tab) => {
     } catch (e) {
       console.error('Failed to update context menu selection:', e);
     }
+  } else if (info.menuItemId === 'url-decoding') {
+    const isUrlDecoding = await storage.get<boolean>('url-decoding');
+    await storage.set('url-decoding', !isUrlDecoding);
   }
 });
 
 const initializeContextMenus = async () => {
   await storage.set('copy-style-id', 'plain-url');
+  await storage.set('url-decoding', true);
 
   chrome.contextMenus.create({
     type: 'normal',
@@ -155,6 +164,14 @@ const initializeContextMenus = async () => {
     id: 'backlog-url',
     title: 'Backlog URL',
     contexts: ['all'],
+  });
+
+  chrome.contextMenus.create({
+    type: 'checkbox',
+    id: 'url-decoding',
+    title: 'URL Decoding',
+    contexts: ['all'],
+    checked: true,
   });
 };
 
