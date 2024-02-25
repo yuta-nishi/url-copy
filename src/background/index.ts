@@ -110,31 +110,35 @@ chrome.action.onClicked.addListener(() => {
 });
 
 chrome.contextMenus.onClicked.addListener(async (info, _tab) => {
-  if (
-    info.menuItemId === 'plain-url' ||
-    info.menuItemId === 'title-url' ||
-    info.menuItemId === 'markdown-url' ||
-    info.menuItemId === 'backlog-url'
-  ) {
-    try {
+  try {
+    if (
+      info.menuItemId === 'plain-url' ||
+      info.menuItemId === 'title-url' ||
+      info.menuItemId === 'markdown-url' ||
+      info.menuItemId === 'backlog-url'
+    ) {
       await updateContextMenusSelection(info.menuItemId);
       await storage.set('copy-style-id', info.menuItemId);
-    } catch (e) {
-      console.error('Failed to update context menu selection:', e);
+    } else if (info.menuItemId === 'remove-params') {
+      const isRemoveParams = await storage.get<boolean>('remove-params');
+      await storage.set('remove-params', !isRemoveParams);
+    } else if (info.menuItemId === 'url-decoding') {
+      const isUrlDecoding = await storage.get<boolean>('url-decoding');
+      await storage.set('url-decoding', !isUrlDecoding);
     }
-  } else if (info.menuItemId === 'remove-params') {
-    const isRemoveParams = await storage.get<boolean>('remove-params');
-    await storage.set('remove-params', !isRemoveParams);
-  } else if (info.menuItemId === 'url-decoding') {
-    const isUrlDecoding = await storage.get<boolean>('url-decoding');
-    await storage.set('url-decoding', !isUrlDecoding);
+  } catch (e) {
+    console.error('Failed to handle context menu click:', e);
   }
 });
 
 const initializeContextMenus = async () => {
-  await storage.set('copy-style-id', 'plain-url');
-  await storage.set('remove-params', true);
-  await storage.set('url-decoding', true);
+  try {
+    await storage.set('copy-style-id', 'plain-url');
+    await storage.set('remove-params', true);
+    await storage.set('url-decoding', true);
+  } catch (e) {
+    console.error('Failed to initialize storage:', e);
+  }
 
   chrome.contextMenus.create({
     type: 'normal',
@@ -201,7 +205,7 @@ export const updateContextMenusSelection = async (selectedItemId: string) => {
   chrome.contextMenus.update(selectedItemId, { checked: true });
 };
 
-const removeParams = (url: string) => {
+export const removeParams = (url: string) => {
   const urlObj = new URL(url);
   if (urlObj.hostname.includes('amazon.co.jp')) {
     return `${urlObj.protocol}//${urlObj.hostname}${urlObj.pathname}`;
