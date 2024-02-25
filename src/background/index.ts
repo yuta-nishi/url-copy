@@ -130,7 +130,7 @@ chrome.contextMenus.onClicked.addListener(async (info, _tab) => {
   }
 });
 
-const initializeContextMenus = async () => {
+export const initializeContextMenus = async () => {
   try {
     await storage.set('copy-style-id', 'plain-url');
     await storage.set('remove-params', true);

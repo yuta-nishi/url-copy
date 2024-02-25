@@ -1,8 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const mockGet = vi.fn();
+const mockSet = vi.fn();
 const mockChrome = {
   contextMenus: {
+    create: vi.fn(),
     update: vi.fn(),
     onClicked: { addListener: vi.fn() },
   },
@@ -19,9 +21,80 @@ const mockChrome = {
 };
 
 vi.mock('@plasmohq/storage', () => ({
-  Storage: vi.fn(() => ({ get: mockGet })),
+  Storage: vi.fn(() => ({ get: mockGet, set: mockSet })),
 }));
 vi.stubGlobal('chrome', mockChrome);
+
+describe('initializeContextMenus', async () => {
+  const { initializeContextMenus } = await import('~/background');
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should initialize storage with correct values', async () => {
+    await initializeContextMenus();
+
+    expect(mockSet).toHaveBeenCalledTimes(3);
+    expect(mockSet).toHaveBeenNthCalledWith(1, 'copy-style-id', 'plain-url');
+    expect(mockSet).toHaveBeenNthCalledWith(2, 'remove-params', true);
+    expect(mockSet).toHaveBeenNthCalledWith(3, 'url-decoding', true);
+  });
+
+  it('should call chrome.contextMenus.create with correct parameters', async () => {
+    await initializeContextMenus();
+
+    expect(mockChrome.contextMenus.create).toHaveBeenCalledTimes(7);
+    expect(mockChrome.contextMenus.create).toHaveBeenNthCalledWith(1, {
+      type: 'normal',
+      id: 'copy-style',
+      title: 'Copy Style',
+      contexts: ['all'],
+    });
+    expect(mockChrome.contextMenus.create).toHaveBeenNthCalledWith(2, {
+      parentId: 'copy-style',
+      type: 'checkbox',
+      id: 'plain-url',
+      title: 'Plain URL',
+      contexts: ['all'],
+      checked: true,
+    });
+    expect(mockChrome.contextMenus.create).toHaveBeenNthCalledWith(3, {
+      parentId: 'copy-style',
+      type: 'checkbox',
+      id: 'title-url',
+      title: 'Title URL',
+      contexts: ['all'],
+    });
+    expect(mockChrome.contextMenus.create).toHaveBeenNthCalledWith(4, {
+      parentId: 'copy-style',
+      type: 'checkbox',
+      id: 'markdown-url',
+      title: 'Markdown URL',
+      contexts: ['all'],
+    });
+    expect(mockChrome.contextMenus.create).toHaveBeenNthCalledWith(5, {
+      parentId: 'copy-style',
+      type: 'checkbox',
+      id: 'backlog-url',
+      title: 'Backlog URL',
+      contexts: ['all'],
+    });
+    expect(mockChrome.contextMenus.create).toHaveBeenNthCalledWith(6, {
+      type: 'checkbox',
+      id: 'remove-params',
+      title: 'Remove Params',
+      contexts: ['all'],
+      checked: true,
+    });
+    expect(mockChrome.contextMenus.create).toHaveBeenNthCalledWith(7, {
+      type: 'checkbox',
+      id: 'url-decoding',
+      title: 'URL Decoding',
+      contexts: ['all'],
+      checked: true,
+    });
+  });
+});
 
 describe('updateContextMenusSelection', async () => {
   const { updateContextMenusSelection } = await import('~/background');
