@@ -59,8 +59,7 @@ chrome.action.onClicked.addListener(() => {
     const isUrlDecoding = await storage.get<boolean>('url-decoding');
     if (isUrlDecoding) {
       try {
-        const decodedUrl = decodeURIComponent(url);
-        url = decodedUrl;
+        url = decodeUrl(url);
       } catch (e) {
         console.error('Failed to decode URL:', e);
       }
@@ -211,4 +210,8 @@ export const removeParams = (url: string) => {
     return `${urlObj.protocol}//${urlObj.hostname}${urlObj.pathname}`;
   }
   return url;
+};
+
+export const decodeUrl = (url: string) => {
+  return decodeURIComponent(url);
 };
