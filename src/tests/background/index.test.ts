@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-const mockGet = vi.fn();
-const mockSet = vi.fn();
-const mockChrome = {
+const getMock = vi.fn();
+const setMock = vi.fn();
+const chromeMock = {
   contextMenus: {
     create: vi.fn(),
     update: vi.fn(),
@@ -21,9 +21,9 @@ const mockChrome = {
 };
 
 vi.mock('@plasmohq/storage', () => ({
-  Storage: vi.fn(() => ({ get: mockGet, set: mockSet })),
+  Storage: vi.fn(() => ({ get: getMock, set: setMock })),
 }));
-vi.stubGlobal('chrome', mockChrome);
+vi.stubGlobal('chrome', chromeMock);
 
 describe('initializeContextMenus', async () => {
   const { initializeContextMenus } = await import('~/background');
@@ -34,23 +34,23 @@ describe('initializeContextMenus', async () => {
   it('should initialize storage with correct values', async () => {
     await initializeContextMenus();
 
-    expect(mockSet).toHaveBeenCalledTimes(3);
-    expect(mockSet).toHaveBeenNthCalledWith(1, 'copy-style-id', 'plain-url');
-    expect(mockSet).toHaveBeenNthCalledWith(2, 'remove-params', true);
-    expect(mockSet).toHaveBeenNthCalledWith(3, 'url-decoding', true);
+    expect(setMock).toHaveBeenCalledTimes(3);
+    expect(setMock).toHaveBeenNthCalledWith(1, 'copy-style-id', 'plain-url');
+    expect(setMock).toHaveBeenNthCalledWith(2, 'remove-params', true);
+    expect(setMock).toHaveBeenNthCalledWith(3, 'url-decoding', true);
   });
 
   it('should call chrome.contextMenus.create with correct parameters', async () => {
     await initializeContextMenus();
 
-    expect(mockChrome.contextMenus.create).toHaveBeenCalledTimes(7);
-    expect(mockChrome.contextMenus.create).toHaveBeenNthCalledWith(1, {
+    expect(chromeMock.contextMenus.create).toHaveBeenCalledTimes(7);
+    expect(chromeMock.contextMenus.create).toHaveBeenNthCalledWith(1, {
       type: 'normal',
       id: 'copy-style',
       title: 'Copy Style',
       contexts: ['all'],
     });
-    expect(mockChrome.contextMenus.create).toHaveBeenNthCalledWith(2, {
+    expect(chromeMock.contextMenus.create).toHaveBeenNthCalledWith(2, {
       parentId: 'copy-style',
       type: 'checkbox',
       id: 'plain-url',
@@ -58,35 +58,35 @@ describe('initializeContextMenus', async () => {
       contexts: ['all'],
       checked: true,
     });
-    expect(mockChrome.contextMenus.create).toHaveBeenNthCalledWith(3, {
+    expect(chromeMock.contextMenus.create).toHaveBeenNthCalledWith(3, {
       parentId: 'copy-style',
       type: 'checkbox',
       id: 'title-url',
       title: 'Title URL',
       contexts: ['all'],
     });
-    expect(mockChrome.contextMenus.create).toHaveBeenNthCalledWith(4, {
+    expect(chromeMock.contextMenus.create).toHaveBeenNthCalledWith(4, {
       parentId: 'copy-style',
       type: 'checkbox',
       id: 'markdown-url',
       title: 'Markdown URL',
       contexts: ['all'],
     });
-    expect(mockChrome.contextMenus.create).toHaveBeenNthCalledWith(5, {
+    expect(chromeMock.contextMenus.create).toHaveBeenNthCalledWith(5, {
       parentId: 'copy-style',
       type: 'checkbox',
       id: 'backlog-url',
       title: 'Backlog URL',
       contexts: ['all'],
     });
-    expect(mockChrome.contextMenus.create).toHaveBeenNthCalledWith(6, {
+    expect(chromeMock.contextMenus.create).toHaveBeenNthCalledWith(6, {
       type: 'checkbox',
       id: 'remove-params',
       title: 'Remove Params',
       contexts: ['all'],
       checked: true,
     });
-    expect(mockChrome.contextMenus.create).toHaveBeenNthCalledWith(7, {
+    expect(chromeMock.contextMenus.create).toHaveBeenNthCalledWith(7, {
       type: 'checkbox',
       id: 'url-decoding',
       title: 'URL Decoding',
@@ -103,22 +103,22 @@ describe('updateContextMenusSelection', async () => {
   });
 
   it('should only check the selected item when it matches the stored value', async () => {
-    mockGet.mockResolvedValue('plain-url');
+    getMock.mockResolvedValue('plain-url');
 
     await updateContextMenusSelection('plain-url');
-    expect(mockChrome.contextMenus.update).toHaveBeenCalledWith('plain-url', {
+    expect(chromeMock.contextMenus.update).toHaveBeenCalledWith('plain-url', {
       checked: true,
     });
   });
 
   it('should check the newly selected item and uncheck the previously stored item when they differ', async () => {
-    mockGet.mockResolvedValue('plain-url');
+    getMock.mockResolvedValue('plain-url');
 
     await updateContextMenusSelection('title-url');
-    expect(mockChrome.contextMenus.update).toHaveBeenCalledWith('plain-url', {
+    expect(chromeMock.contextMenus.update).toHaveBeenCalledWith('plain-url', {
       checked: false,
     });
-    expect(mockChrome.contextMenus.update).toHaveBeenCalledWith('title-url', {
+    expect(chromeMock.contextMenus.update).toHaveBeenCalledWith('title-url', {
       checked: true,
     });
   });
