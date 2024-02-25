@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, describe, expect, it, vi } from 'vitest';
 
 const getMock = vi.fn();
 const setMock = vi.fn();
@@ -14,9 +14,13 @@ const chromeMock = {
     },
     OnInstalledReason: { INSTALL: 'install' },
     onStartup: { addListener: vi.fn() },
+    openOptionsPage: vi.fn(),
   },
   action: {
     onClicked: { addListener: vi.fn() },
+  },
+  commands: {
+    getAll: vi.fn(),
   },
 };
 
@@ -24,6 +28,32 @@ vi.mock('@plasmohq/storage', () => ({
   Storage: vi.fn(() => ({ get: getMock, set: setMock })),
 }));
 vi.stubGlobal('chrome', chromeMock);
+
+describe('chrome.runtime.onInstalled.addListener', () => {
+  afterAll(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should call chrome.commands.getAll when installed', () => {
+    chromeMock.runtime.onInstalled.addListener.mock.calls[0][0]({
+      reason: chrome.runtime.OnInstalledReason.INSTALL,
+    });
+    expect(chromeMock.commands.getAll).toHaveBeenCalled();
+  });
+
+  it('should call chrome.runtime.openOptionsPage when there are missing shortcuts', () => {
+    const commands: chrome.commands.Command[] = [
+      { name: 'command1', shortcut: 'Ctrl+C' },
+      { name: 'command2', shortcut: '' },
+      { name: 'command3', shortcut: 'Ctrl+X' },
+    ];
+    chromeMock.commands.getAll.mockImplementation((callback) => callback(commands));
+    chromeMock.runtime.onInstalled.addListener.mock.calls[0][0]({
+      reason: chrome.runtime.OnInstalledReason.INSTALL,
+    });
+    expect(chromeMock.runtime.openOptionsPage).toHaveBeenCalled();
+  });
+});
 
 describe('initializeContextMenus', async () => {
   const { initializeContextMenus } = await import('~/background');
@@ -43,7 +73,6 @@ describe('initializeContextMenus', async () => {
   it('should handle errors when initializing storage', async () => {
     const error = new Error('Failed to set value');
     setMock.mockRejectedValue(error);
-
     const consoleSpy = vi.spyOn(console, 'error');
 
     await initializeContextMenus();
