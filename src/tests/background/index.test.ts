@@ -36,7 +36,7 @@ describe('chrome.runtime.onInstalled.addListener', () => {
 
   it('should call chrome.commands.getAll when installed', () => {
     chromeMock.runtime.onInstalled.addListener.mock.calls[0][0]({
-      reason: chrome.runtime.OnInstalledReason.INSTALL,
+      reason: chromeMock.runtime.OnInstalledReason.INSTALL,
     });
     expect(chromeMock.commands.getAll).toHaveBeenCalled();
   });
@@ -49,7 +49,7 @@ describe('chrome.runtime.onInstalled.addListener', () => {
     ];
     chromeMock.commands.getAll.mockImplementation((callback) => callback(commands));
     chromeMock.runtime.onInstalled.addListener.mock.calls[0][0]({
-      reason: chrome.runtime.OnInstalledReason.INSTALL,
+      reason: chromeMock.runtime.OnInstalledReason.INSTALL,
     });
     expect(chromeMock.runtime.openOptionsPage).toHaveBeenCalled();
   });
