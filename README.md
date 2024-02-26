@@ -28,4 +28,11 @@ Chrome extension to copy the current URL to the clipboard. \
 * Markdown link
 * Backlog link
 
+### Options
+
+* Remove query parameters
+  * amazon.co.jp
+
+* URL Decoding
+
 [Demo Video](https://www.youtube.com/watch?v=m7AEzk4cKF0)
