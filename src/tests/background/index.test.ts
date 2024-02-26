@@ -22,6 +22,10 @@ const chromeMock = {
   commands: {
     getAll: vi.fn(),
   },
+  tabs: {
+    query: vi.fn(),
+    sendMessage: vi.fn(),
+  },
 };
 
 vi.mock('@plasmohq/storage', () => ({
@@ -133,6 +137,52 @@ describe('initializeContextMenus', async () => {
       contexts: ['all'],
       checked: true,
     });
+  });
+});
+
+describe('formatUrl', async () => {
+  const { formatUrl } = await import('~/background');
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should return the original URL when copyStyleId is not provided', () => {
+    const title = 'Example Title';
+    const url = 'https://www.example.com';
+    const result = formatUrl(title, url);
+    expect(result).toBe(url);
+  });
+
+  it('should concatenate the title and URL when copyStyleId is "title-url"', () => {
+    const title = 'Example Title';
+    const url = 'https://www.example.com';
+    const copyStyleId = 'title-url';
+    const result = formatUrl(title, url, copyStyleId);
+    expect(result).toBe(`${title} ${url}`);
+  });
+
+  it('should format the URL as a Markdown link when copyStyleId is "markdown-url"', () => {
+    const title = 'Example Title';
+    const url = 'https://www.example.com';
+    const copyStyleId = 'markdown-url';
+    const result = formatUrl(title, url, copyStyleId);
+    expect(result).toBe(`[${title}](${url})`);
+  });
+
+  it('should format the URL as a Backlog link when copyStyleId is "backlog-url"', () => {
+    const title = 'Example Title';
+    const url = 'https://www.example.com';
+    const copyStyleId = 'backlog-url';
+    const result = formatUrl(title, url, copyStyleId);
+    expect(result).toBe(`[${title}>${url}]`);
+  });
+
+  it('should return the original URL when copyStyleId is not recognized', () => {
+    const title = 'Example Title';
+    const url = 'https://www.example.com';
+    const copyStyleId = 'unknown-style';
+    const result = formatUrl(title, url, copyStyleId);
+    expect(result).toBe(url);
   });
 });
 

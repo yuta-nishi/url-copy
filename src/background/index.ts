@@ -67,31 +67,20 @@ chrome.action.onClicked.addListener(() => {
 
     try {
       const copyStyleId = await storage.get<string>('copy-style-id');
-      let text: string;
-      switch (copyStyleId) {
-        case 'title-url': {
-          const title = activeTab.title;
-          text = `${title} ${url}`;
-          break;
-        }
-        case 'markdown-url': {
-          const title = activeTab.title;
-          text = `[${title}](${url})`;
-          break;
-        }
-        case 'backlog-url': {
-          const title = activeTab.title;
-          text = `[${title}>${url}]`;
-          break;
-        }
-        default: {
-          text = url;
-          break;
-        }
+      if (!activeTab.title) {
+        const errorMessage: Message = {
+          type: 'error',
+          text: 'No title found',
+        };
+        await chrome.tabs.sendMessage(tabId, errorMessage);
+        return;
       }
-      const message: Message = { type: 'copy', text };
+      const title = activeTab.title;
+      url = formatUrl(title, url, copyStyleId);
+      const message: Message = { type: 'copy', text: url };
       await chrome.tabs.sendMessage(tabId, message);
     } catch (e) {
+      // Catch errors that occur on pages like chrome://extensions/
       if (
         e instanceof Error &&
         e.message === 'Could not establish connection. Receiving end does not exist.'
@@ -120,10 +109,18 @@ chrome.contextMenus.onClicked.addListener(async (info, _tab) => {
       await storage.set('copy-style-id', info.menuItemId);
     } else if (info.menuItemId === 'remove-params') {
       const isRemoveParams = await storage.get<boolean>('remove-params');
-      await storage.set('remove-params', !isRemoveParams);
+      if (isRemoveParams !== undefined) {
+        await storage.set('remove-params', !isRemoveParams);
+      } else {
+        console.error('Failed to get "remove-params" from storage');
+      }
     } else if (info.menuItemId === 'url-decoding') {
       const isUrlDecoding = await storage.get<boolean>('url-decoding');
-      await storage.set('url-decoding', !isUrlDecoding);
+      if (isUrlDecoding !== undefined) {
+        await storage.set('url-decoding', !isUrlDecoding);
+      } else {
+        console.error('Failed to get "url-decoding" from storage');
+      }
     }
   } catch (e) {
     console.error('Failed to handle context menu click:', e);
@@ -194,6 +191,26 @@ export const initializeContextMenus = async () => {
     contexts: ['all'],
     checked: true,
   });
+};
+
+export const formatUrl = (title: string, url: string, copyStyleId?: string) => {
+  if (!copyStyleId) {
+    return url;
+  }
+  switch (copyStyleId) {
+    case 'title-url': {
+      return `${title} ${url}`;
+    }
+    case 'markdown-url': {
+      return `[${title}](${url})`;
+    }
+    case 'backlog-url': {
+      return `[${title}>${url}]`;
+    }
+    default: {
+      return url;
+    }
+  }
 };
 
 export const updateContextMenusSelection = async (selectedItemId: string) => {
