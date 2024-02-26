@@ -5,9 +5,9 @@ import { getMissingShortcuts } from '~/lib/utils';
 describe('getMissingShortcuts', () => {
   it('should return an empty array when all commands have shortcuts', () => {
     const commands: chrome.commands.Command[] = [
-      { name: 'Command1', shortcut: 'Ctrl+C' },
-      { name: 'Command2', shortcut: 'Ctrl+V' },
-      { name: 'Command3', shortcut: 'Ctrl+X' },
+      { name: 'command1', shortcut: 'Ctrl+C' },
+      { name: 'command2', shortcut: 'Ctrl+V' },
+      { name: 'command3', shortcut: 'Ctrl+X' },
     ];
     const result = getMissingShortcuts(commands);
     expect(result).toEqual([]);
@@ -15,12 +15,12 @@ describe('getMissingShortcuts', () => {
 
   it('should return an array of missing shortcuts', () => {
     const commands: chrome.commands.Command[] = [
-      { name: 'Command1', shortcut: 'Ctrl+C' },
-      { name: 'Command2', shortcut: '' },
-      { name: 'Command3', shortcut: 'Ctrl+X' },
+      { name: 'command1', shortcut: 'Ctrl+C' },
+      { name: 'command2', shortcut: '' },
+      { name: 'command3', shortcut: 'Ctrl+X' },
     ];
     const result = getMissingShortcuts(commands);
-    expect(result).toEqual(['Command2']);
+    expect(result).toEqual(['command2']);
   });
 
   it('should return an empty array when there are no commands', () => {

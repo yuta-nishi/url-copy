@@ -23,7 +23,7 @@ chrome.runtime.onInstalled.addListener(async (details) => {
 });
 
 chrome.action.onClicked.addListener(() => {
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+  chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
     if (chrome.runtime.lastError) {
       console.error('Failed to query tabs:', chrome.runtime.lastError.message);
       return;
@@ -46,76 +46,95 @@ chrome.action.onClicked.addListener(() => {
         type: 'error',
         text: 'No URL found',
       };
-      (async () => {
-        await chrome.tabs.sendMessage(tabId, errorMessage);
-      })();
+      await chrome.tabs.sendMessage(tabId, errorMessage);
       return;
     }
-    const url = activeTab.url;
+    let url = activeTab.url;
 
-    (async () => {
+    const isRemoveParams = await storage.get<boolean>('remove-params');
+    if (isRemoveParams) {
+      url = removeParams(url);
+    }
+
+    const isUrlDecoding = await storage.get<boolean>('url-decoding');
+    if (isUrlDecoding) {
       try {
-        const copyStyleId = await storage.get<string>('copy-style-id');
-        let text: string;
-        switch (copyStyleId) {
-          case 'title-url': {
-            const title = activeTab.title;
-            text = `${title} ${url}`;
-            break;
-          }
-          case 'markdown-url': {
-            const title = activeTab.title;
-            text = `[${title}](${url})`;
-            break;
-          }
-          case 'backlog-url': {
-            const title = activeTab.title;
-            text = `[${title}>${url}]`;
-            break;
-          }
-          default: {
-            text = url;
-            break;
-          }
-        }
-        const message: Message = { type: 'copy', text };
-        await chrome.tabs.sendMessage(tabId, message);
+        url = decodeUrl(url);
       } catch (e) {
-        if (
-          e instanceof Error &&
-          e.message === 'Could not establish connection. Receiving end does not exist.'
-        ) {
-          console.error('url-copy extension cannot run on the current page.');
-        } else if (e instanceof Error) {
-          const errorMessage: Message = {
-            type: 'error',
-            text: e.message,
-          };
-          await chrome.tabs.sendMessage(tabId, errorMessage);
-        }
+        console.error('Failed to decode URL:', e);
       }
-    })();
+    }
+
+    try {
+      const copyStyleId = await storage.get<string>('copy-style-id');
+      if (!activeTab.title) {
+        const errorMessage: Message = {
+          type: 'error',
+          text: 'No title found',
+        };
+        await chrome.tabs.sendMessage(tabId, errorMessage);
+        return;
+      }
+      const title = activeTab.title;
+      url = formatUrl(title, url, copyStyleId);
+      const message: Message = { type: 'copy', text: url };
+      await chrome.tabs.sendMessage(tabId, message);
+    } catch (e) {
+      // Catch errors that occur on pages like chrome://extensions/
+      if (
+        e instanceof Error &&
+        e.message === 'Could not establish connection. Receiving end does not exist.'
+      ) {
+        console.error('url-copy extension cannot run on the current page.');
+      } else if (e instanceof Error) {
+        const errorMessage: Message = {
+          type: 'error',
+          text: e.message,
+        };
+        await chrome.tabs.sendMessage(tabId, errorMessage);
+      }
+    }
   });
 });
 
 chrome.contextMenus.onClicked.addListener(async (info, _tab) => {
-  if (
-    info.menuItemId === 'plain-url' ||
-    info.menuItemId === 'title-url' ||
-    info.menuItemId === 'markdown-url' ||
-    info.menuItemId === 'backlog-url'
-  ) {
-    try {
+  try {
+    if (
+      info.menuItemId === 'plain-url' ||
+      info.menuItemId === 'title-url' ||
+      info.menuItemId === 'markdown-url' ||
+      info.menuItemId === 'backlog-url'
+    ) {
       await updateContextMenusSelection(info.menuItemId);
       await storage.set('copy-style-id', info.menuItemId);
-    } catch (e) {
-      console.error('Failed to update context menu selection:', e);
+    } else if (info.menuItemId === 'remove-params') {
+      const isRemoveParams = await storage.get<boolean>('remove-params');
+      if (isRemoveParams !== undefined) {
+        await storage.set('remove-params', !isRemoveParams);
+      } else {
+        console.error('Failed to get "remove-params" from storage');
+      }
+    } else if (info.menuItemId === 'url-decoding') {
+      const isUrlDecoding = await storage.get<boolean>('url-decoding');
+      if (isUrlDecoding !== undefined) {
+        await storage.set('url-decoding', !isUrlDecoding);
+      } else {
+        console.error('Failed to get "url-decoding" from storage');
+      }
     }
+  } catch (e) {
+    console.error('Failed to handle context menu click:', e);
   }
 });
 
-const initializeContextMenus = async () => {
-  await storage.set('copy-style-id', 'plain-url');
+export const initializeContextMenus = async () => {
+  try {
+    await storage.set('copy-style-id', 'plain-url');
+    await storage.set('remove-params', true);
+    await storage.set('url-decoding', true);
+  } catch (e) {
+    console.error('Failed to initialize storage:', e);
+  }
 
   chrome.contextMenus.create({
     type: 'normal',
@@ -156,6 +175,42 @@ const initializeContextMenus = async () => {
     title: 'Backlog URL',
     contexts: ['all'],
   });
+
+  chrome.contextMenus.create({
+    type: 'checkbox',
+    id: 'remove-params',
+    title: 'Remove Params',
+    contexts: ['all'],
+    checked: true,
+  });
+
+  chrome.contextMenus.create({
+    type: 'checkbox',
+    id: 'url-decoding',
+    title: 'URL Decoding',
+    contexts: ['all'],
+    checked: true,
+  });
+};
+
+export const formatUrl = (title: string, url: string, copyStyleId?: string) => {
+  if (!copyStyleId) {
+    return url;
+  }
+  switch (copyStyleId) {
+    case 'title-url': {
+      return `${title} ${url}`;
+    }
+    case 'markdown-url': {
+      return `[${title}](${url})`;
+    }
+    case 'backlog-url': {
+      return `[${title}>${url}]`;
+    }
+    default: {
+      return url;
+    }
+  }
 };
 
 export const updateContextMenusSelection = async (selectedItemId: string) => {
@@ -164,4 +219,16 @@ export const updateContextMenusSelection = async (selectedItemId: string) => {
     chrome.contextMenus.update(prevCopyStyleId, { checked: false });
   }
   chrome.contextMenus.update(selectedItemId, { checked: true });
+};
+
+export const removeParams = (url: string) => {
+  const urlObj = new URL(url);
+  if (urlObj.hostname.includes('amazon.co.jp')) {
+    return `${urlObj.protocol}//${urlObj.hostname}${urlObj.pathname}`;
+  }
+  return url;
+};
+
+export const decodeUrl = (url: string) => {
+  return decodeURIComponent(url);
 };
