@@ -1,8 +1,10 @@
 import tsconfigPaths from 'vite-tsconfig-paths';
 import { defineConfig } from 'vitest/config';
 
+import plasmoCssPaths from './src/plugins/plasmo-css-paths';
+
 export default defineConfig({
-  plugins: [tsconfigPaths()],
+  plugins: [tsconfigPaths(), plasmoCssPaths()],
   test: {
     include: ['src/tests/**/*.test.{ts,tsx}'],
     globals: true,
