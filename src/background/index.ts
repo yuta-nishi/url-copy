@@ -145,7 +145,7 @@ export const initializeContextMenus = async () => {
 
   chrome.contextMenus.create({
     parentId: 'copy-style',
-    type: 'checkbox',
+    type: 'radio',
     id: 'plain-url',
     title: 'Plain URL',
     contexts: ['all'],
@@ -154,7 +154,7 @@ export const initializeContextMenus = async () => {
 
   chrome.contextMenus.create({
     parentId: 'copy-style',
-    type: 'checkbox',
+    type: 'radio',
     id: 'title-url',
     title: 'Title URL',
     contexts: ['all'],
@@ -162,7 +162,7 @@ export const initializeContextMenus = async () => {
 
   chrome.contextMenus.create({
     parentId: 'copy-style',
-    type: 'checkbox',
+    type: 'radio',
     id: 'markdown-url',
     title: 'Markdown URL',
     contexts: ['all'],
@@ -170,7 +170,7 @@ export const initializeContextMenus = async () => {
 
   chrome.contextMenus.create({
     parentId: 'copy-style',
-    type: 'checkbox',
+    type: 'radio',
     id: 'backlog-url',
     title: 'Backlog URL',
     contexts: ['all'],

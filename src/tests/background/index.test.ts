@@ -96,7 +96,7 @@ describe('initializeContextMenus', async () => {
     });
     expect(chromeMock.contextMenus.create).toHaveBeenNthCalledWith(2, {
       parentId: 'copy-style',
-      type: 'checkbox',
+      type: 'radio',
       id: 'plain-url',
       title: 'Plain URL',
       contexts: ['all'],
@@ -104,21 +104,21 @@ describe('initializeContextMenus', async () => {
     });
     expect(chromeMock.contextMenus.create).toHaveBeenNthCalledWith(3, {
       parentId: 'copy-style',
-      type: 'checkbox',
+      type: 'radio',
       id: 'title-url',
       title: 'Title URL',
       contexts: ['all'],
     });
     expect(chromeMock.contextMenus.create).toHaveBeenNthCalledWith(4, {
       parentId: 'copy-style',
-      type: 'checkbox',
+      type: 'radio',
       id: 'markdown-url',
       title: 'Markdown URL',
       contexts: ['all'],
     });
     expect(chromeMock.contextMenus.create).toHaveBeenNthCalledWith(5, {
       parentId: 'copy-style',
-      type: 'checkbox',
+      type: 'radio',
       id: 'backlog-url',
       title: 'Backlog URL',
       contexts: ['all'],
