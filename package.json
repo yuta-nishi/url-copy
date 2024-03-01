@@ -10,7 +10,7 @@
     "build": "plasmo build",
     "package": "plasmo package",
     "test": "vitest run --passWithNoTests",
-    "coverage": "vitest run --coverage",
+    "coverage": "vitest run --coverage --passWithNoTests",
     "watch": "vitest watch",
     "lint": "eslint './*.{js,ts,tsx}' './src/**/*.{ts,tsx}'",
     "fmt": "prettier --write './*.{js,ts,tsx}' './src/**/*.{ts,tsx}'",
