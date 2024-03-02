@@ -14,7 +14,7 @@ export default defineConfig({
       // Note that the path specification method for test.include is different. The following will not work.
       // include: ['./src/**/*.{ts,tsx}'],
       include: ['src/**/*.{ts,tsx}'],
-      exclude: ['src/components/ui'],
+      exclude: ['src/components/ui', '**/types/**'],
     },
   },
 });
