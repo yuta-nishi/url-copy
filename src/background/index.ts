@@ -5,22 +5,24 @@ import type { Message } from '~/types/message';
 
 const storage = new Storage();
 
-chrome.runtime.onInstalled.addListener(async (details) => {
-  if (details.reason === chrome.runtime.OnInstalledReason.INSTALL) {
-    chrome.commands.getAll((commands) => {
-      const missingShortcuts = getMissingShortcuts(commands);
-      if (missingShortcuts.length > 0) {
-        chrome.runtime.openOptionsPage();
-      }
-    });
-  }
+export const runtimeOnInstalledListener = () => {
+  chrome.runtime.onInstalled.addListener(async (details) => {
+    if (details.reason === chrome.runtime.OnInstalledReason.INSTALL) {
+      chrome.commands.getAll((commands) => {
+        const missingShortcuts = getMissingShortcuts(commands);
+        if (missingShortcuts.length > 0) {
+          chrome.runtime.openOptionsPage();
+        }
+      });
+    }
 
-  try {
-    await initializeContextMenus();
-  } catch (e) {
-    console.error('Failed to initialize context menus:', e);
-  }
-});
+    try {
+      await initializeContextMenus();
+    } catch (e) {
+      console.error('Failed to initialize context menus:', e);
+    }
+  });
+};
 
 chrome.action.onClicked.addListener(() => {
   chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
@@ -232,3 +234,5 @@ export const removeParams = (url: string) => {
 export const decodeUrl = (url: string) => {
   return decodeURIComponent(url);
 };
+
+runtimeOnInstalledListener();

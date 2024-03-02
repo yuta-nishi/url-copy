@@ -1,4 +1,4 @@
-import { afterAll, afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const getMock = vi.fn();
 const setMock = vi.fn();
@@ -33,34 +33,51 @@ vi.mock('@plasmohq/storage', () => ({
 }));
 vi.stubGlobal('chrome', chromeMock);
 
-describe('chrome.runtime.onInstalled.addListener', () => {
-  afterAll(() => {
+describe('runtimeOnInstalledListener', async () => {
+  const { runtimeOnInstalledListener } = await import('~/background');
+
+  afterEach(() => {
     vi.clearAllMocks();
   });
 
   it('should call chrome.commands.getAll when installed', () => {
+    runtimeOnInstalledListener();
+
     chromeMock.runtime.onInstalled.addListener.mock.calls[0][0]({
       reason: chromeMock.runtime.OnInstalledReason.INSTALL,
     });
+
     expect(chromeMock.commands.getAll).toHaveBeenCalled();
   });
 
-  it('should call chrome.runtime.openOptionsPage when there are missing shortcuts', () => {
+  it('should call chrome.runtime.openOptionsPage when there are missing shortcuts', async () => {
     const commands: chrome.commands.Command[] = [
       { name: 'command1', shortcut: 'Ctrl+C' },
       { name: 'command2', shortcut: '' },
       { name: 'command3', shortcut: 'Ctrl+X' },
     ];
-    chromeMock.commands.getAll.mockImplementation((callback) => callback(commands));
+    chromeMock.commands.getAll.mockImplementation((cb) => cb(commands));
+
+    runtimeOnInstalledListener();
+
     chromeMock.runtime.onInstalled.addListener.mock.calls[0][0]({
       reason: chromeMock.runtime.OnInstalledReason.INSTALL,
     });
+
     expect(chromeMock.runtime.openOptionsPage).toHaveBeenCalled();
+
+    // Confirm if await initializeContextMenus(); passes
+    await vi.waitFor(() => {
+      expect(setMock).toHaveBeenCalledWith('copy-style-id', 'plain-url');
+      expect(setMock).toHaveBeenCalledWith('remove-params', true);
+      expect(setMock).toHaveBeenCalledWith('url-decoding', true);
+    });
   });
 });
 
 describe('initializeContextMenus', async () => {
   const { initializeContextMenus } = await import('~/background');
+
   afterEach(() => {
     vi.clearAllMocks();
   });
