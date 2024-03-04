@@ -24,80 +24,82 @@ export const runtimeOnInstalledListener = () => {
   });
 };
 
-chrome.action.onClicked.addListener(() => {
-  chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
-    if (chrome.runtime.lastError) {
-      console.error('Failed to query tabs:', chrome.runtime.lastError.message);
-      return;
-    }
-
-    if (!tabs[0]) {
-      console.error('No active tab found');
-      return;
-    }
-    const activeTab = tabs[0];
-
-    if (!activeTab.id) {
-      console.error('Active tab has no ID');
-      return;
-    }
-    const tabId = activeTab.id;
-
-    if (!activeTab.url) {
-      const errorMessage: Message = {
-        type: 'error',
-        text: 'No URL found',
-      };
-      await chrome.tabs.sendMessage(tabId, errorMessage);
-      return;
-    }
-    let url = activeTab.url;
-
-    const isRemoveParams = await storage.get<boolean>('remove-params');
-    if (isRemoveParams) {
-      url = removeParams(url);
-    }
-
-    const isUrlDecoding = await storage.get<boolean>('url-decoding');
-    if (isUrlDecoding) {
-      try {
-        url = decodeUrl(url);
-      } catch (e) {
-        console.error('Failed to decode URL:', e);
+export const actionOnClickedListener = () => {
+  chrome.action.onClicked.addListener(() => {
+    chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
+      if (chrome.runtime.lastError) {
+        console.error('Failed to query tabs:', chrome.runtime.lastError.message);
+        return;
       }
-    }
 
-    try {
-      const copyStyleId = await storage.get<string>('copy-style-id');
-      if (!activeTab.title) {
+      if (!tabs[0]) {
+        console.error('No active tab found');
+        return;
+      }
+      const activeTab = tabs[0];
+
+      if (!activeTab.id) {
+        console.error('Active tab has no ID');
+        return;
+      }
+      const tabId = activeTab.id;
+
+      if (!activeTab.url) {
         const errorMessage: Message = {
           type: 'error',
-          text: 'No title found',
+          text: 'No URL found',
         };
         await chrome.tabs.sendMessage(tabId, errorMessage);
         return;
       }
-      const title = activeTab.title;
-      url = formatUrl(title, url, copyStyleId);
-      const message: Message = { type: 'copy', text: url };
-      await chrome.tabs.sendMessage(tabId, message);
-    } catch (e) {
-      // Catch errors that occur on pages like chrome://extensions/
-      if (
-        e instanceof Error &&
-        e.message === 'Could not establish connection. Receiving end does not exist.'
-      ) {
-        console.error('url-copy extension cannot run on the current page.');
-      } else if (e instanceof Error) {
-        const errorMessage: Message = {
-          type: 'error',
-          text: e.message,
-        };
-        await chrome.tabs.sendMessage(tabId, errorMessage);
+      let url = activeTab.url;
+
+      const isRemoveParams = await storage.get<boolean>('remove-params');
+      if (isRemoveParams) {
+        url = removeParams(url);
       }
-    }
+
+      const isUrlDecoding = await storage.get<boolean>('url-decoding');
+      if (isUrlDecoding) {
+        try {
+          url = decodeUrl(url);
+        } catch (e) {
+          console.error('Failed to decode URL:', e);
+        }
+      }
+
+      try {
+        const copyStyleId = await storage.get<string>('copy-style-id');
+        if (!activeTab.title) {
+          const errorMessage: Message = {
+            type: 'error',
+            text: 'No title found',
+          };
+          await chrome.tabs.sendMessage(tabId, errorMessage);
+          return;
+        }
+        const title = activeTab.title;
+        url = formatUrl(title, url, copyStyleId);
+        const message: Message = { type: 'copy', text: url };
+        await chrome.tabs.sendMessage(tabId, message);
+      } catch (e) {
+        // Catch errors that occur on pages like chrome://extensions/
+        if (
+          e instanceof Error &&
+          e.message === 'Could not establish connection. Receiving end does not exist.'
+        ) {
+          console.error('url-copy extension cannot run on the current page.');
+        } else if (e instanceof Error) {
+          const errorMessage: Message = {
+            type: 'error',
+            text: e.message,
+          };
+          await chrome.tabs.sendMessage(tabId, errorMessage);
+        }
+      }
+    });
   });
-});
+};
 
 chrome.contextMenus.onClicked.addListener(async (info, _tab) => {
   try {
@@ -236,3 +238,4 @@ export const decodeUrl = (url: string) => {
 };
 
 runtimeOnInstalledListener();
+actionOnClickedListener();
