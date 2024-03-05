@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const getMock = vi.fn();
+const getCopyStyleIdMock = vi.fn();
+const getRemoveParamsMock = vi.fn();
+const getUrlDecodingMock = vi.fn();
 const setMock = vi.fn();
 const chromeMock = {
   contextMenus: {
@@ -30,7 +32,19 @@ const chromeMock = {
 };
 
 vi.mock('@plasmohq/storage', () => ({
-  Storage: vi.fn(() => ({ get: getMock, set: setMock })),
+  Storage: vi.fn(() => ({
+    get: vi.fn((key) => {
+      switch (key) {
+        case 'copy-style-id':
+          return getCopyStyleIdMock();
+        case 'remove-params':
+          return getRemoveParamsMock();
+        case 'url-decoding':
+          return getUrlDecodingMock();
+      }
+    }),
+    set: setMock,
+  })),
 }));
 vi.stubGlobal('chrome', chromeMock);
 
@@ -161,9 +175,48 @@ describe('actionOnClickedListener', async () => {
     });
   });
 
+  it('should call chrome.tabs.sendMessage with url when copyStyleId is undefined', async () => {
+    const tabsMock = [{ id: 123, title: 'example', url: 'https://www.example.com' }];
+    chromeMock.tabs.query.mockImplementation((_, cb) => cb(tabsMock));
+    getRemoveParamsMock.mockResolvedValue(false);
+    getUrlDecodingMock.mockResolvedValue(false);
+    getCopyStyleIdMock.mockResolvedValue(undefined);
+
+    actionOnClickedListener();
+    chromeMock.action.onClicked.addListener.mock.calls[0][0]();
+
+    await vi.waitFor(() => {
+      expect(chromeMock.tabs.sendMessage).toHaveBeenCalledWith(123, {
+        type: 'copy',
+        text: 'https://www.example.com',
+      });
+    });
+  });
+
+  it('should call chrome.tabs.sendMessage with url when copyStyleId is plain-url', async () => {
+    const tabsMock = [{ id: 123, title: 'example', url: 'https://www.example.com' }];
+    chromeMock.tabs.query.mockImplementation((_, cb) => cb(tabsMock));
+    getRemoveParamsMock.mockResolvedValue(false);
+    getUrlDecodingMock.mockResolvedValue(false);
+    getCopyStyleIdMock.mockResolvedValue('plain-url');
+
+    actionOnClickedListener();
+    chromeMock.action.onClicked.addListener.mock.calls[0][0]();
+
+    await vi.waitFor(() => {
+      expect(chromeMock.tabs.sendMessage).toHaveBeenCalledWith(123, {
+        type: 'copy',
+        text: 'https://www.example.com',
+      });
+    });
+  });
+
   it('should call chrome.tabs.sendMessage with error message when no title is found', async () => {
     const tabsMock = [{ id: 123, url: 'https://www.example.com' }];
     chromeMock.tabs.query.mockImplementation((_, cb) => cb(tabsMock));
+    getRemoveParamsMock.mockResolvedValue(false);
+    getUrlDecodingMock.mockResolvedValue(false);
+    getCopyStyleIdMock.mockResolvedValue('title-url');
 
     actionOnClickedListener();
     chromeMock.action.onClicked.addListener.mock.calls[0][0]();
@@ -172,6 +225,169 @@ describe('actionOnClickedListener', async () => {
       expect(chromeMock.tabs.sendMessage).toHaveBeenCalledWith(123, {
         type: 'error',
         text: 'No title found',
+      });
+    });
+  });
+
+  it('should call chrome.tabs.sendMessage with url when copyStyleId is title-url', async () => {
+    const tabsMock = [{ id: 123, title: 'example', url: 'https://www.example.com' }];
+    chromeMock.tabs.query.mockImplementation((_, cb) => cb(tabsMock));
+    getRemoveParamsMock.mockResolvedValue(false);
+    getUrlDecodingMock.mockResolvedValue(false);
+    getCopyStyleIdMock.mockResolvedValue('title-url');
+
+    actionOnClickedListener();
+    chromeMock.action.onClicked.addListener.mock.calls[0][0]();
+
+    await vi.waitFor(() => {
+      expect(chromeMock.tabs.sendMessage).toHaveBeenCalledWith(123, {
+        type: 'copy',
+        text: 'example https://www.example.com',
+      });
+    });
+  });
+
+  it('should call chrome.tabs.sendMessage with url when copyStyleId is markdown', async () => {
+    const tabsMock = [{ id: 123, title: 'example', url: 'https://www.example.com' }];
+    chromeMock.tabs.query.mockImplementation((_, cb) => cb(tabsMock));
+    getRemoveParamsMock.mockResolvedValue(false);
+    getUrlDecodingMock.mockResolvedValue(false);
+    getCopyStyleIdMock.mockResolvedValue('markdown-url');
+
+    actionOnClickedListener();
+    chromeMock.action.onClicked.addListener.mock.calls[0][0]();
+
+    await vi.waitFor(() => {
+      expect(chromeMock.tabs.sendMessage).toHaveBeenCalledWith(123, {
+        type: 'copy',
+        text: '[example](https://www.example.com)',
+      });
+    });
+  });
+
+  it('should call chrome.tabs.sendMessage with url when copyStyleId is backlog', async () => {
+    const tabsMock = [{ id: 123, title: 'example', url: 'https://www.example.com' }];
+    chromeMock.tabs.query.mockImplementation((_, cb) => cb(tabsMock));
+    getRemoveParamsMock.mockResolvedValue(false);
+    getUrlDecodingMock.mockResolvedValue(false);
+    getCopyStyleIdMock.mockResolvedValue('backlog-url');
+
+    actionOnClickedListener();
+    chromeMock.action.onClicked.addListener.mock.calls[0][0]();
+
+    await vi.waitFor(() => {
+      expect(chromeMock.tabs.sendMessage).toHaveBeenCalledWith(123, {
+        type: 'copy',
+        text: '[example>https://www.example.com]',
+      });
+    });
+  });
+
+  it('should call chrome.tabs.sendMessage with url when copyStyleId is plain-url and removeParams is true', async () => {
+    const tabsMock = [
+      {
+        id: 123,
+        url: 'https://www.amazon.co.jp/dp/B08S6XH593/ref=sspa_dk_detail_4?psc=1&pd_rd_i=B08S6XH593',
+      },
+    ];
+    chromeMock.tabs.query.mockImplementation((_, cb) => cb(tabsMock));
+    getRemoveParamsMock.mockResolvedValue(true);
+    getUrlDecodingMock.mockResolvedValue(false);
+    getCopyStyleIdMock.mockResolvedValue('plain-url');
+
+    actionOnClickedListener();
+    chromeMock.action.onClicked.addListener.mock.calls[0][0]();
+
+    await vi.waitFor(() => {
+      expect(chromeMock.tabs.sendMessage).toHaveBeenCalledWith(123, {
+        type: 'copy',
+        text: 'https://www.amazon.co.jp/dp/B08S6XH593/ref=sspa_dk_detail_4',
+      });
+    });
+  });
+
+  it('should call chrome.tabs.sendMessage with url when copyStyleId is plain-url and urlDecoding is true', async () => {
+    const tabsMock = [
+      {
+        id: 123,
+        url: 'https://www.amazon.co.jp/%E3%83%AD%E3%82%B8%E3%82%AF%E3%83%BC%E3%83%AB',
+      },
+    ];
+    chromeMock.tabs.query.mockImplementation((_, cb) => cb(tabsMock));
+    getRemoveParamsMock.mockResolvedValue(false);
+    getUrlDecodingMock.mockResolvedValue(true);
+    getCopyStyleIdMock.mockResolvedValue('plain-url');
+
+    actionOnClickedListener();
+    chromeMock.action.onClicked.addListener.mock.calls[0][0]();
+
+    await vi.waitFor(() => {
+      expect(chromeMock.tabs.sendMessage).toHaveBeenCalledWith(123, {
+        type: 'copy',
+        text: 'https://www.amazon.co.jp/ロジクール',
+      });
+    });
+  });
+
+  it('should call chrome.tabs.sendMessage with url when copyStyleId is plain-url, removeParams is true, and urlDecoding is true', async () => {
+    const tabsMock = [
+      {
+        id: 123,
+        url: 'https://www.amazon.co.jp/%E3%83%AD%E3%82%B8%E3%82%AF%E3%83%BC%E3%83%AB?param=value',
+      },
+    ];
+    chromeMock.tabs.query.mockImplementation((_, cb) => cb(tabsMock));
+    getRemoveParamsMock.mockResolvedValue(true);
+    getUrlDecodingMock.mockResolvedValue(true);
+    getCopyStyleIdMock.mockResolvedValue('plain-url');
+
+    actionOnClickedListener();
+    chromeMock.action.onClicked.addListener.mock.calls[0][0]();
+
+    await vi.waitFor(() => {
+      expect(chromeMock.tabs.sendMessage).toHaveBeenCalledWith(123, {
+        type: 'copy',
+        text: 'https://www.amazon.co.jp/ロジクール',
+      });
+    });
+  });
+
+  it('should call console.error when could not establish connection', async () => {
+    const tabsMock = [{ id: 123, url: 'https://www.example.com' }];
+    chromeMock.tabs.query.mockImplementation((_, cb) => cb(tabsMock));
+    getRemoveParamsMock.mockResolvedValue(false);
+    getUrlDecodingMock.mockResolvedValue(false);
+    getCopyStyleIdMock.mockResolvedValue('plain-url');
+    chromeMock.tabs.sendMessage.mockRejectedValueOnce(
+      new Error('Could not establish connection. Receiving end does not exist.'),
+    );
+    const consoleSpy = vi.spyOn(console, 'error');
+
+    actionOnClickedListener();
+    chromeMock.action.onClicked.addListener.mock.calls[0][0]();
+
+    await vi.waitFor(() => {
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'url-copy extension cannot run on the current page.',
+      );
+    });
+  });
+
+  it('should call console.error when an error occurs', async () => {
+    const tabsMock = [{ id: 123, url: 'https://www.example.com' }];
+    chromeMock.tabs.query.mockImplementation((_, cb) => cb(tabsMock));
+    getRemoveParamsMock.mockResolvedValue(false);
+    getUrlDecodingMock.mockResolvedValue(false);
+    getCopyStyleIdMock.mockResolvedValue('plain-url');
+    chromeMock.tabs.sendMessage.mockRejectedValueOnce(new Error('error'));
+
+    actionOnClickedListener();
+    chromeMock.action.onClicked.addListener.mock.calls[0][0]();
+
+    await vi.waitFor(() => {
+      expect(chromeMock.tabs.sendMessage).toHaveBeenCalledWith(123, {
+        type: 'error',
+        text: 'error',
       });
     });
   });

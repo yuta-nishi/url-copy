@@ -56,7 +56,11 @@ export const actionOnClickedListener = () => {
 
       const isRemoveParams = await storage.get<boolean>('remove-params');
       if (isRemoveParams) {
-        url = removeParams(url);
+        try {
+          url = removeParams(url);
+        } catch (e) {
+          console.error('Failed to remove params:', e);
+        }
       }
 
       const isUrlDecoding = await storage.get<boolean>('url-decoding');
@@ -70,6 +74,12 @@ export const actionOnClickedListener = () => {
 
       try {
         const copyStyleId = await storage.get<string>('copy-style-id');
+        if (!copyStyleId || copyStyleId === 'plain-url') {
+          const message: Message = { type: 'copy', text: url };
+          await chrome.tabs.sendMessage(tabId, message);
+          return;
+        }
+
         if (!activeTab.title) {
           const errorMessage: Message = {
             type: 'error',
@@ -197,10 +207,7 @@ export const initializeContextMenus = async () => {
   });
 };
 
-export const formatUrl = (title: string, url: string, copyStyleId?: string) => {
-  if (!copyStyleId) {
-    return url;
-  }
+export const formatUrl = (title: string, url: string, copyStyleId: string) => {
   switch (copyStyleId) {
     case 'title-url': {
       return `${title} ${url}`;
