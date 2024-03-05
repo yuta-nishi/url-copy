@@ -56,11 +56,10 @@ describe('runtimeOnInstalledListener', async () => {
   });
 
   it('should call chrome.commands.getAll when installed', () => {
-    runtimeOnInstalledListener();
+    const details = { reason: chromeMock.runtime.OnInstalledReason.INSTALL };
 
-    chromeMock.runtime.onInstalled.addListener.mock.calls[0][0]({
-      reason: chromeMock.runtime.OnInstalledReason.INSTALL,
-    });
+    runtimeOnInstalledListener();
+    chromeMock.runtime.onInstalled.addListener.mock.calls[0][0](details);
 
     expect(chromeMock.commands.getAll).toHaveBeenCalled();
   });
@@ -72,12 +71,10 @@ describe('runtimeOnInstalledListener', async () => {
       { name: 'command3', shortcut: 'Ctrl+X' },
     ];
     chromeMock.commands.getAll.mockImplementation((cb) => cb(commands));
+    const details = { reason: chromeMock.runtime.OnInstalledReason.INSTALL };
 
     runtimeOnInstalledListener();
-
-    chromeMock.runtime.onInstalled.addListener.mock.calls[0][0]({
-      reason: chromeMock.runtime.OnInstalledReason.INSTALL,
-    });
+    chromeMock.runtime.onInstalled.addListener.mock.calls[0][0](details);
 
     expect(chromeMock.runtime.openOptionsPage).toHaveBeenCalled();
 
@@ -358,7 +355,7 @@ describe('actionOnClickedListener', async () => {
     getRemoveParamsMock.mockResolvedValue(false);
     getUrlDecodingMock.mockResolvedValue(false);
     getCopyStyleIdMock.mockResolvedValue('plain-url');
-    chromeMock.tabs.sendMessage.mockRejectedValueOnce(
+    chromeMock.tabs.sendMessage.mockRejectedValue(
       new Error('Could not establish connection. Receiving end does not exist.'),
     );
     const consoleSpy = vi.spyOn(console, 'error');
@@ -379,16 +376,15 @@ describe('actionOnClickedListener', async () => {
     getRemoveParamsMock.mockResolvedValue(false);
     getUrlDecodingMock.mockResolvedValue(false);
     getCopyStyleIdMock.mockResolvedValue('plain-url');
-    chromeMock.tabs.sendMessage.mockRejectedValueOnce(new Error('error'));
+    const error = new Error('error');
+    chromeMock.tabs.sendMessage.mockRejectedValue(error);
+    const consoleSpy = vi.spyOn(console, 'error');
 
     actionOnClickedListener();
     chromeMock.action.onClicked.addListener.mock.calls[0][0]();
 
     await vi.waitFor(() => {
-      expect(chromeMock.tabs.sendMessage).toHaveBeenCalledWith(123, {
-        type: 'error',
-        text: 'error',
-      });
+      expect(consoleSpy).toHaveBeenCalledWith('Failed to send message:', error);
     });
   });
 });
@@ -398,5 +394,145 @@ describe('contextMenusOnClickedListener', async () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+  });
+
+  it('should update context menus selection and set copy-style-id when menu item is plain-url', async () => {
+    const info = { menuItemId: 'plain-url' };
+
+    contextMenusOnClickedListener();
+    chromeMock.contextMenus.onClicked.addListener.mock.calls[0][0](info, null);
+
+    await vi.waitFor(() => {
+      expect(chromeMock.contextMenus.update).toHaveBeenCalledWith('plain-url', {
+        checked: true,
+      });
+      expect(setMock).toHaveBeenCalledWith('copy-style-id', 'plain-url');
+    });
+  });
+
+  it('should update context menus selection and set copy-style-id when menu item is title-url', async () => {
+    const info = { menuItemId: 'title-url' };
+
+    contextMenusOnClickedListener();
+    chromeMock.contextMenus.onClicked.addListener.mock.calls[0][0](info, null);
+
+    await vi.waitFor(() => {
+      expect(chromeMock.contextMenus.update).toHaveBeenCalledWith('title-url', {
+        checked: true,
+      });
+      expect(setMock).toHaveBeenCalledWith('copy-style-id', 'title-url');
+    });
+  });
+
+  it('should update context menus selection and set copy-style-id when menu item is markdown-url', async () => {
+    const info = { menuItemId: 'markdown-url' };
+
+    contextMenusOnClickedListener();
+    chromeMock.contextMenus.onClicked.addListener.mock.calls[0][0](info, null);
+
+    await vi.waitFor(() => {
+      expect(chromeMock.contextMenus.update).toHaveBeenCalledWith('markdown-url', {
+        checked: true,
+      });
+      expect(setMock).toHaveBeenCalledWith('copy-style-id', 'markdown-url');
+    });
+  });
+
+  it('should update context menus selection and set copy-style-id when menu item is backlog-url', async () => {
+    const info = { menuItemId: 'backlog-url' };
+
+    contextMenusOnClickedListener();
+    chromeMock.contextMenus.onClicked.addListener.mock.calls[0][0](info, null);
+
+    await vi.waitFor(() => {
+      expect(chromeMock.contextMenus.update).toHaveBeenCalledWith('backlog-url', {
+        checked: true,
+      });
+      expect(setMock).toHaveBeenCalledWith('copy-style-id', 'backlog-url');
+    });
+  });
+
+  it('should update remove-params when menu item is remove-params', async () => {
+    const info = { menuItemId: 'remove-params' };
+    getRemoveParamsMock.mockResolvedValue(false);
+
+    contextMenusOnClickedListener();
+    chromeMock.contextMenus.onClicked.addListener.mock.calls[0][0](info, null);
+
+    await vi.waitFor(() => {
+      expect(setMock).toHaveBeenCalledWith('remove-params', true);
+    });
+  });
+
+  it('should call console.error when remove-params is undefined', async () => {
+    const info = { menuItemId: 'remove-params' };
+    getRemoveParamsMock.mockResolvedValue(undefined);
+    const consoleSpy = vi.spyOn(console, 'error');
+
+    contextMenusOnClickedListener();
+    chromeMock.contextMenus.onClicked.addListener.mock.calls[0][0](info, null);
+
+    await vi.waitFor(() => {
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'Failed to get "remove-params" from storage',
+      );
+    });
+  });
+
+  it('should update url-decoding when menu item is url-decoding', async () => {
+    const info = { menuItemId: 'url-decoding' };
+    getUrlDecodingMock.mockResolvedValue(false);
+
+    contextMenusOnClickedListener();
+    chromeMock.contextMenus.onClicked.addListener.mock.calls[0][0](info, null);
+
+    await vi.waitFor(() => {
+      expect(setMock).toHaveBeenCalledWith('url-decoding', true);
+    });
+  });
+
+  it('should call console.error when url-decoding is undefined', async () => {
+    const info = { menuItemId: 'url-decoding' };
+    getUrlDecodingMock.mockResolvedValue(undefined);
+    const consoleSpy = vi.spyOn(console, 'error');
+
+    contextMenusOnClickedListener();
+    chromeMock.contextMenus.onClicked.addListener.mock.calls[0][0](info, null);
+
+    await vi.waitFor(() => {
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'Failed to get "url-decoding" from storage',
+      );
+    });
+  });
+
+  it('should call console.error when menu item is unknown', () => {
+    const info = { menuItemId: 'unknown' };
+    const consoleSpy = vi.spyOn(console, 'error');
+
+    contextMenusOnClickedListener();
+    chromeMock.contextMenus.onClicked.addListener.mock.calls[0][0](info, null);
+
+    expect(consoleSpy).toHaveBeenCalledWith(
+      'Unknown context menu item:',
+      info.menuItemId,
+    );
+  });
+
+  it('should call console.error when an error occurs', async () => {
+    const info = { menuItemId: 'plain-url' };
+    const error = new Error('error');
+    getCopyStyleIdMock.mockRejectedValue(error);
+    const consoleSpy = vi.spyOn(console, 'error');
+
+    contextMenusOnClickedListener();
+    chromeMock.contextMenus.onClicked.addListener.mock.calls[0][0](info, null);
+
+    await vi.waitFor(() => {
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'Failed to handle context menu click:',
+        error,
+      );
+    });
   });
 });

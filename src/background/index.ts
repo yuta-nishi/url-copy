@@ -27,52 +27,52 @@ export const runtimeOnInstalledListener = () => {
 export const actionOnClickedListener = () => {
   chrome.action.onClicked.addListener(() => {
     chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
-      if (chrome.runtime.lastError) {
-        console.error('Failed to query tabs:', chrome.runtime.lastError);
-        return;
-      }
-
-      if (!tabs[0]) {
-        console.error('No active tab found');
-        return;
-      }
-      const activeTab = tabs[0];
-
-      if (!activeTab.id) {
-        console.error('Active tab has no ID');
-        return;
-      }
-      const tabId = activeTab.id;
-
-      if (!activeTab.url) {
-        const errorMessage: Message = {
-          type: 'error',
-          text: 'No URL found',
-        };
-        await chrome.tabs.sendMessage(tabId, errorMessage);
-        return;
-      }
-      let url = activeTab.url;
-
-      const isRemoveParams = await storage.get<boolean>('remove-params');
-      if (isRemoveParams) {
-        try {
-          url = removeParams(url);
-        } catch (e) {
-          console.error('Failed to remove params:', e);
-        }
-      }
-
-      const isUrlDecoding = await storage.get<boolean>('url-decoding');
-      if (isUrlDecoding) {
-        try {
-          url = decodeUrl(url);
-        } catch (e) {
-          console.error('Failed to decode URL:', e);
-        }
-      }
-
       try {
+        if (chrome.runtime.lastError) {
+          console.error('Failed to query tabs:', chrome.runtime.lastError);
+          return;
+        }
+
+        if (!tabs[0]) {
+          console.error('No active tab found');
+          return;
+        }
+        const activeTab = tabs[0];
+
+        if (!activeTab.id) {
+          console.error('Active tab has no ID');
+          return;
+        }
+        const tabId = activeTab.id;
+
+        if (!activeTab.url) {
+          const errorMessage: Message = {
+            type: 'error',
+            text: 'No URL found',
+          };
+          await chrome.tabs.sendMessage(tabId, errorMessage);
+          return;
+        }
+        let url = activeTab.url;
+
+        const isRemoveParams = await storage.get<boolean>('remove-params');
+        if (isRemoveParams) {
+          try {
+            url = removeParams(url);
+          } catch (e) {
+            console.error('Failed to remove params:', e);
+          }
+        }
+
+        const isUrlDecoding = await storage.get<boolean>('url-decoding');
+        if (isUrlDecoding) {
+          try {
+            url = decodeUrl(url);
+          } catch (e) {
+            console.error('Failed to decode URL:', e);
+          }
+        }
+
         const copyStyleId = await storage.get<string>('copy-style-id');
         if (!copyStyleId || copyStyleId === 'plain-url') {
           const message: Message = { type: 'copy', text: url };
@@ -99,12 +99,8 @@ export const actionOnClickedListener = () => {
           e.message === 'Could not establish connection. Receiving end does not exist.'
         ) {
           console.error('url-copy extension cannot run on the current page.');
-        } else if (e instanceof Error) {
-          const errorMessage: Message = {
-            type: 'error',
-            text: e.message,
-          };
-          await chrome.tabs.sendMessage(tabId, errorMessage);
+        } else {
+          console.error('Failed to send message:', e);
         }
       }
     });
@@ -136,6 +132,8 @@ export const contextMenusOnClickedListener = () => {
         } else {
           console.error('Failed to get "url-decoding" from storage');
         }
+      } else {
+        console.error('Unknown context menu item:', info.menuItemId);
       }
     } catch (e) {
       console.error('Failed to handle context menu click:', e);
