@@ -28,7 +28,7 @@ export const actionOnClickedListener = () => {
   chrome.action.onClicked.addListener(() => {
     chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
       if (chrome.runtime.lastError) {
-        console.error('Failed to query tabs:', chrome.runtime.lastError.message);
+        console.error('Failed to query tabs:', chrome.runtime.lastError);
         return;
       }
 
@@ -111,35 +111,37 @@ export const actionOnClickedListener = () => {
   });
 };
 
-chrome.contextMenus.onClicked.addListener(async (info, _tab) => {
-  try {
-    if (
-      info.menuItemId === 'plain-url' ||
-      info.menuItemId === 'title-url' ||
-      info.menuItemId === 'markdown-url' ||
-      info.menuItemId === 'backlog-url'
-    ) {
-      await updateContextMenusSelection(info.menuItemId);
-      await storage.set('copy-style-id', info.menuItemId);
-    } else if (info.menuItemId === 'remove-params') {
-      const isRemoveParams = await storage.get<boolean>('remove-params');
-      if (isRemoveParams !== undefined) {
-        await storage.set('remove-params', !isRemoveParams);
-      } else {
-        console.error('Failed to get "remove-params" from storage');
+export const contextMenusOnClickedListener = () => {
+  chrome.contextMenus.onClicked.addListener(async (info, _tab) => {
+    try {
+      if (
+        info.menuItemId === 'plain-url' ||
+        info.menuItemId === 'title-url' ||
+        info.menuItemId === 'markdown-url' ||
+        info.menuItemId === 'backlog-url'
+      ) {
+        await updateContextMenusSelection(info.menuItemId);
+        await storage.set('copy-style-id', info.menuItemId);
+      } else if (info.menuItemId === 'remove-params') {
+        const isRemoveParams = await storage.get<boolean>('remove-params');
+        if (isRemoveParams !== undefined) {
+          await storage.set('remove-params', !isRemoveParams);
+        } else {
+          console.error('Failed to get "remove-params" from storage');
+        }
+      } else if (info.menuItemId === 'url-decoding') {
+        const isUrlDecoding = await storage.get<boolean>('url-decoding');
+        if (isUrlDecoding !== undefined) {
+          await storage.set('url-decoding', !isUrlDecoding);
+        } else {
+          console.error('Failed to get "url-decoding" from storage');
+        }
       }
-    } else if (info.menuItemId === 'url-decoding') {
-      const isUrlDecoding = await storage.get<boolean>('url-decoding');
-      if (isUrlDecoding !== undefined) {
-        await storage.set('url-decoding', !isUrlDecoding);
-      } else {
-        console.error('Failed to get "url-decoding" from storage');
-      }
+    } catch (e) {
+      console.error('Failed to handle context menu click:', e);
     }
-  } catch (e) {
-    console.error('Failed to handle context menu click:', e);
-  }
-});
+  });
+};
 
 export const initializeContextMenus = async () => {
   try {
@@ -246,3 +248,4 @@ export const decodeUrl = (url: string) => {
 
 runtimeOnInstalledListener();
 actionOnClickedListener();
+contextMenusOnClickedListener();

@@ -125,15 +125,15 @@ describe('actionOnClickedListener', async () => {
     const tabsMock = [{ id: 123, title: 'example', url: 'https://www.example.com' }];
     chromeMock.tabs.query.mockImplementation((_, cb) => cb(tabsMock));
 
-    const message = 'error';
+    const error = new Error('error');
     // @ts-expect-error need to override lastError type for this test case.
-    chromeMock.runtime.lastError = { message };
+    chromeMock.runtime.lastError = error;
     const consoleSpy = vi.spyOn(console, 'error');
 
     actionOnClickedListener();
     chromeMock.action.onClicked.addListener.mock.calls[0][0]();
 
-    expect(consoleSpy).toHaveBeenCalledWith('Failed to query tabs:', message);
+    expect(consoleSpy).toHaveBeenCalledWith('Failed to query tabs:', error);
   });
 
   it('should call console.error when no active tab is found', () => {
@@ -390,5 +390,13 @@ describe('actionOnClickedListener', async () => {
         text: 'error',
       });
     });
+  });
+});
+
+describe('contextMenusOnClickedListener', async () => {
+  const { contextMenusOnClickedListener } = await import('~/background');
+
+  afterEach(() => {
+    vi.clearAllMocks();
   });
 });
