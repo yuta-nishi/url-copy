@@ -5,127 +5,141 @@ import type { Message } from '~/types/message';
 
 const storage = new Storage();
 
-chrome.runtime.onInstalled.addListener(async (details) => {
-  if (details.reason === chrome.runtime.OnInstalledReason.INSTALL) {
-    chrome.commands.getAll((commands) => {
-      const missingShortcuts = getMissingShortcuts(commands);
-      if (missingShortcuts.length > 0) {
-        chrome.runtime.openOptionsPage();
-      }
-    });
-  }
-
-  try {
-    await initializeContextMenus();
-  } catch (e) {
-    console.error('Failed to initialize context menus:', e);
-  }
-});
-
-chrome.action.onClicked.addListener(() => {
-  chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
-    if (chrome.runtime.lastError) {
-      console.error('Failed to query tabs:', chrome.runtime.lastError.message);
-      return;
-    }
-
-    if (!tabs[0]) {
-      console.error('No active tab found');
-      return;
-    }
-    const activeTab = tabs[0];
-
-    if (!activeTab.id) {
-      console.error('Active tab has no ID');
-      return;
-    }
-    const tabId = activeTab.id;
-
-    if (!activeTab.url) {
-      const errorMessage: Message = {
-        type: 'error',
-        text: 'No URL found',
-      };
-      await chrome.tabs.sendMessage(tabId, errorMessage);
-      return;
-    }
-    let url = activeTab.url;
-
-    const isRemoveParams = await storage.get<boolean>('remove-params');
-    if (isRemoveParams) {
-      url = removeParams(url);
-    }
-
-    const isUrlDecoding = await storage.get<boolean>('url-decoding');
-    if (isUrlDecoding) {
-      try {
-        url = decodeUrl(url);
-      } catch (e) {
-        console.error('Failed to decode URL:', e);
-      }
+export const runtimeOnInstalledListener = () => {
+  chrome.runtime.onInstalled.addListener(async (details) => {
+    if (details.reason === chrome.runtime.OnInstalledReason.INSTALL) {
+      chrome.commands.getAll((commands) => {
+        const missingShortcuts = getMissingShortcuts(commands);
+        if (missingShortcuts.length > 0) {
+          chrome.runtime.openOptionsPage();
+        }
+      });
     }
 
     try {
-      const copyStyleId = await storage.get<string>('copy-style-id');
-      if (!activeTab.title) {
-        const errorMessage: Message = {
-          type: 'error',
-          text: 'No title found',
-        };
-        await chrome.tabs.sendMessage(tabId, errorMessage);
-        return;
-      }
-      const title = activeTab.title;
-      url = formatUrl(title, url, copyStyleId);
-      const message: Message = { type: 'copy', text: url };
-      await chrome.tabs.sendMessage(tabId, message);
+      await initializeContextMenus();
     } catch (e) {
-      // Catch errors that occur on pages like chrome://extensions/
-      if (
-        e instanceof Error &&
-        e.message === 'Could not establish connection. Receiving end does not exist.'
-      ) {
-        console.error('url-copy extension cannot run on the current page.');
-      } else if (e instanceof Error) {
-        const errorMessage: Message = {
-          type: 'error',
-          text: e.message,
-        };
-        await chrome.tabs.sendMessage(tabId, errorMessage);
-      }
+      console.error('Failed to initialize context menus:', e);
     }
   });
-});
+};
 
-chrome.contextMenus.onClicked.addListener(async (info, _tab) => {
-  try {
-    if (
-      info.menuItemId === 'plain-url' ||
-      info.menuItemId === 'title-url' ||
-      info.menuItemId === 'markdown-url' ||
-      info.menuItemId === 'backlog-url'
-    ) {
-      await updateContextMenusSelection(info.menuItemId);
-      await storage.set('copy-style-id', info.menuItemId);
-    } else if (info.menuItemId === 'remove-params') {
-      const isRemoveParams = await storage.get<boolean>('remove-params');
-      if (isRemoveParams !== undefined) {
-        await storage.set('remove-params', !isRemoveParams);
-      } else {
-        console.error('Failed to get "remove-params" from storage');
+export const actionOnClickedListener = () => {
+  chrome.action.onClicked.addListener(() => {
+    chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
+      try {
+        if (chrome.runtime.lastError) {
+          console.error('Failed to query tabs:', chrome.runtime.lastError);
+          return;
+        }
+
+        if (!tabs[0]) {
+          console.error('No active tab found');
+          return;
+        }
+        const activeTab = tabs[0];
+
+        if (!activeTab.id) {
+          console.error('Active tab has no ID');
+          return;
+        }
+        const tabId = activeTab.id;
+
+        if (!activeTab.url) {
+          const errorMessage: Message = {
+            type: 'error',
+            text: 'No URL found',
+          };
+          await chrome.tabs.sendMessage(tabId, errorMessage);
+          return;
+        }
+        let url = activeTab.url;
+
+        const isRemoveParams = await storage.get<boolean>('remove-params');
+        if (isRemoveParams) {
+          try {
+            url = removeParams(url);
+          } catch (e) {
+            console.error('Failed to remove params:', e);
+          }
+        }
+
+        const isUrlDecoding = await storage.get<boolean>('url-decoding');
+        if (isUrlDecoding) {
+          try {
+            url = decodeUrl(url);
+          } catch (e) {
+            console.error('Failed to decode URL:', e);
+          }
+        }
+
+        const copyStyleId = await storage.get<string>('copy-style-id');
+        if (!copyStyleId || copyStyleId === 'plain-url') {
+          const message: Message = { type: 'copy', text: url };
+          await chrome.tabs.sendMessage(tabId, message);
+          return;
+        }
+
+        if (!activeTab.title) {
+          const errorMessage: Message = {
+            type: 'error',
+            text: 'No title found',
+          };
+          await chrome.tabs.sendMessage(tabId, errorMessage);
+          return;
+        }
+        const title = activeTab.title;
+        url = formatUrl(title, url, copyStyleId);
+        const message: Message = { type: 'copy', text: url };
+        await chrome.tabs.sendMessage(tabId, message);
+      } catch (e) {
+        // Catch errors that occur on pages like chrome://extensions/
+        if (
+          e instanceof Error &&
+          e.message === 'Could not establish connection. Receiving end does not exist.'
+        ) {
+          console.error('url-copy extension cannot run on the current page.');
+        } else {
+          console.error('Failed to send message:', e);
+        }
       }
-    } else if (info.menuItemId === 'url-decoding') {
-      const isUrlDecoding = await storage.get<boolean>('url-decoding');
-      if (isUrlDecoding !== undefined) {
-        await storage.set('url-decoding', !isUrlDecoding);
+    });
+  });
+};
+
+export const contextMenusOnClickedListener = () => {
+  chrome.contextMenus.onClicked.addListener(async (info, _tab) => {
+    try {
+      if (
+        info.menuItemId === 'plain-url' ||
+        info.menuItemId === 'title-url' ||
+        info.menuItemId === 'markdown-url' ||
+        info.menuItemId === 'backlog-url'
+      ) {
+        await updateContextMenusSelection(info.menuItemId);
+        await storage.set('copy-style-id', info.menuItemId);
+      } else if (info.menuItemId === 'remove-params') {
+        const isRemoveParams = await storage.get<boolean>('remove-params');
+        if (isRemoveParams !== undefined) {
+          await storage.set('remove-params', !isRemoveParams);
+        } else {
+          console.error('Failed to get "remove-params" from storage');
+        }
+      } else if (info.menuItemId === 'url-decoding') {
+        const isUrlDecoding = await storage.get<boolean>('url-decoding');
+        if (isUrlDecoding !== undefined) {
+          await storage.set('url-decoding', !isUrlDecoding);
+        } else {
+          console.error('Failed to get "url-decoding" from storage');
+        }
       } else {
-        console.error('Failed to get "url-decoding" from storage');
+        console.error('Unknown context menu item:', info.menuItemId);
       }
+    } catch (e) {
+      console.error('Failed to handle context menu click:', e);
     }
-  } catch (e) {
-    console.error('Failed to handle context menu click:', e);
-  }
-});
+  });
+};
 
 export const initializeContextMenus = async () => {
   try {
@@ -145,7 +159,7 @@ export const initializeContextMenus = async () => {
 
   chrome.contextMenus.create({
     parentId: 'copy-style',
-    type: 'checkbox',
+    type: 'radio',
     id: 'plain-url',
     title: 'Plain URL',
     contexts: ['all'],
@@ -154,7 +168,7 @@ export const initializeContextMenus = async () => {
 
   chrome.contextMenus.create({
     parentId: 'copy-style',
-    type: 'checkbox',
+    type: 'radio',
     id: 'title-url',
     title: 'Title URL',
     contexts: ['all'],
@@ -162,7 +176,7 @@ export const initializeContextMenus = async () => {
 
   chrome.contextMenus.create({
     parentId: 'copy-style',
-    type: 'checkbox',
+    type: 'radio',
     id: 'markdown-url',
     title: 'Markdown URL',
     contexts: ['all'],
@@ -170,7 +184,7 @@ export const initializeContextMenus = async () => {
 
   chrome.contextMenus.create({
     parentId: 'copy-style',
-    type: 'checkbox',
+    type: 'radio',
     id: 'backlog-url',
     title: 'Backlog URL',
     contexts: ['all'],
@@ -193,10 +207,7 @@ export const initializeContextMenus = async () => {
   });
 };
 
-export const formatUrl = (title: string, url: string, copyStyleId?: string) => {
-  if (!copyStyleId) {
-    return url;
-  }
+export const formatUrl = (title: string, url: string, copyStyleId: string) => {
   switch (copyStyleId) {
     case 'title-url': {
       return `${title} ${url}`;
@@ -232,3 +243,7 @@ export const removeParams = (url: string) => {
 export const decodeUrl = (url: string) => {
   return decodeURIComponent(url);
 };
+
+runtimeOnInstalledListener();
+actionOnClickedListener();
+contextMenusOnClickedListener();

@@ -22,7 +22,7 @@ const Contents = (): JSX.Element => {
 
   useEffect(() => {
     if (notification) {
-      if (notification === 'Copied Current URL') {
+      if (notification === 'Copied current URL') {
         toast({
           description: notification,
         });
@@ -40,23 +40,20 @@ const Contents = (): JSX.Element => {
     .query({ name: 'clipboard-write' as PermissionName })
     .then((res) => {
       if (res.state === 'granted' || res.state === 'prompt') {
-        chrome.runtime.onMessage.addListener(
-          (message: Message, _sender, _sendResponse) => {
-            // TODO: add tests for this
-            if (message.type === 'copy') {
-              navigator.clipboard.writeText(message.text).then(
-                () => {
-                  setNotification('Copied Current URL');
-                },
-                () => {
-                  setNotification('Failed to copy URL');
-                },
-              );
-            } else if (message.type === 'error') {
-              setNotification(message.text);
-            }
-          },
-        );
+        chrome.runtime.onMessage.addListener((message: Message) => {
+          if (message.type === 'copy') {
+            navigator.clipboard.writeText(message.text).then(
+              () => {
+                setNotification('Copied current URL');
+              },
+              () => {
+                setNotification('Failed to copy URL');
+              },
+            );
+          } else if (message.type === 'error') {
+            setNotification(message.text);
+          }
+        });
       }
     });
 

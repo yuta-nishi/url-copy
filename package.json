@@ -1,7 +1,7 @@
 {
   "name": "url-copy",
   "displayName": "URL Copy",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "__MSG_description__",
   "author": "yuta-nishi",
   "homepage": "https://github.com/yuta-nishi/url-copy",
@@ -10,7 +10,7 @@
     "build": "plasmo build",
     "package": "plasmo package",
     "test": "vitest run --passWithNoTests",
-    "coverage": "vitest run --coverage",
+    "coverage": "vitest run --coverage --passWithNoTests",
     "watch": "vitest watch",
     "lint": "eslint './*.{js,ts,tsx}' './src/**/*.{ts,tsx}'",
     "fmt": "prettier --write './*.{js,ts,tsx}' './src/**/*.{ts,tsx}'",
@@ -28,14 +28,16 @@
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "tailwind-merge": "^2.2.1",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "vite": "^5.1.4"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.4.2",
     "@testing-library/react": "^14.2.1",
-    "@types/chrome": "0.0.262",
-    "@types/node": "20.11.24",
-    "@types/react": "18.2.61",
+    "@testing-library/user-event": "^14.5.2",
+    "@types/chrome": "0.0.261",
+    "@types/node": "20.11.20",
+    "@types/react": "18.2.58",
     "@types/react-dom": "18.2.19",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^7.0.0",
