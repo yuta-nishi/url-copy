@@ -3,6 +3,9 @@
   <h1 style="color: hsl(, 100%, 50%);">URL Copy</h1>
 </div>
 
+![test](https://github.com/yuta-nishi/url-copy/actions/workflows/test.yml/badge.svg)
+[![codecov](https://codecov.io/gh/yuta-nishi/url-copy/graph/badge.svg?token=PIPR0LWRKN)](https://codecov.io/gh/yuta-nishi/url-copy)
+
 Chrome extension to copy the current URL to the clipboard. \
 [Chrome Web Store link](https://chromewebstore.google.com/detail/url-copy/khfenepnobebagchdbalmfeafedaljki)
 
