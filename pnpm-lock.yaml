@@ -86,8 +86,8 @@ devDependencies:
     specifier: ^7.33.2
     version: 7.35.2(eslint@8.57.0)
   happy-dom:
-    specifier: ^14.0.0
-    version: 14.12.3
+    specifier: ^15.0.0
+    version: 15.7.3
   husky:
     specifier: ^9.0.11
     version: 9.1.5
@@ -111,7 +111,7 @@ devDependencies:
     version: 4.3.2(typescript@5.5.4)(vite@5.4.3)
   vitest:
     specifier: ^1.3.0
-    version: 1.6.0(@types/node@20.16.5)(happy-dom@14.12.3)
+    version: 1.6.0(@types/node@20.16.5)(happy-dom@15.7.3)
 
 packages:
 
@@ -3660,7 +3660,7 @@ packages:
       std-env: 3.7.0
       strip-literal: 2.1.0
       test-exclude: 6.0.0
-      vitest: 1.6.0(@types/node@20.16.5)(happy-dom@14.12.3)
+      vitest: 1.6.0(@types/node@20.16.5)(happy-dom@15.7.3)
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -5464,9 +5464,9 @@ packages:
     engines: {node: '>= 10.x'}
     dev: false
 
-  /happy-dom@14.12.3:
-    resolution: {integrity: sha512-vsYlEs3E9gLwA1Hp+w3qzu+RUDFf4VTT8cyKqVICoZ2k7WM++Qyd2LwzyTi5bqMJFiIC/vNpTDYuxdreENRK/g==}
-    engines: {node: '>=16.0.0'}
+  /happy-dom@15.7.3:
+    resolution: {integrity: sha512-w3RUaYNXFJX5LiNVhOJLK4GqCB1bFj1FvELtpon3HrN8gUpS09V0Vvm4/BBRRj7mLUE1+ch8PKv1JxEp/0IHjA==}
+    engines: {node: '>=18.0.0'}
     dependencies:
       entities: 4.5.0
       webidl-conversions: 7.0.0
@@ -8439,7 +8439,7 @@ packages:
     optionalDependencies:
       fsevents: 2.3.3
 
-  /vitest@1.6.0(@types/node@20.16.5)(happy-dom@14.12.3):
+  /vitest@1.6.0(@types/node@20.16.5)(happy-dom@15.7.3):
     resolution: {integrity: sha512-H5r/dN06swuFnzNFhq/dnz37bPXnq8xB2xB5JOVk8K09rUtoeNN+LHWkoQ0A/i3hvbUKKcCei9KpbxqHMLhLLA==}
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
@@ -8474,7 +8474,7 @@ packages:
       chai: 4.4.1
       debug: 4.3.4
       execa: 8.0.1
-      happy-dom: 14.12.3
+      happy-dom: 15.7.3
       local-pkg: 0.5.0
       magic-string: 0.30.10
       pathe: 1.1.2
