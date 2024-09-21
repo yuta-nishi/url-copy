@@ -34,7 +34,7 @@ const Contents = (): JSX.Element => {
       }
       setNotification('');
     }
-  }, [notification]);
+  }, [notification, toast]);
 
   navigator.permissions
     .query({ name: 'clipboard-write' as PermissionName })

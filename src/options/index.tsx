@@ -26,6 +26,7 @@ const Options = () => {
           <AlertDescription>
             Some keyboard shortcuts are in conflict.
             <button
+              type="button"
               onClick={async () =>
                 await chrome.tabs.create({ url: 'chrome://extensions/shortcuts' })
               }
@@ -38,7 +39,7 @@ const Options = () => {
       ) : (
         <Alert>
           <AlertTitle className="flex items-center gap-3">
-            <Icons.check_circle className="h-4 w-4"></Icons.check_circle>
+            <Icons.check_circle className="h-4 w-4" />
             <h1 className="text-lg">No Shortcut Conflict!</h1>
           </AlertTitle>
         </Alert>

@@ -41,6 +41,8 @@ vi.mock('@plasmohq/storage', () => ({
           return getRemoveParamsMock();
         case 'url-decoding':
           return getUrlDecodingMock();
+        default:
+          throw new Error(`Unexpected key: ${key}`);
       }
     }),
     set: setMock,

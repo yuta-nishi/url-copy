@@ -24,7 +24,7 @@ vi.mock('~/components/ui/use-toast', () => ({
   useToast: vi.fn(() => ({ toast: toastMock })),
 }));
 vi.mock('~/components/ui/toaster', () => ({
-  Toaster: vi.fn().mockImplementation(() => <div data-testid="mock-toaster"></div>),
+  Toaster: vi.fn().mockImplementation(() => <div data-testid="mock-toaster" />),
 }));
 vi.stubGlobal('chrome', chromeMock);
 vi.stubGlobal('navigator', navigatorMock);
