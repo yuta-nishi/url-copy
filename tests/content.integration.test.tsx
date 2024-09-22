@@ -1,7 +1,7 @@
 import { render, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import Contents from '~/contents';
+import Contents from '~/content';
 
 const chromeMock = {
   runtime: {
