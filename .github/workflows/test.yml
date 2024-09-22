@@ -1,14 +1,18 @@
-name: Run Test
+name: test
+
 on:
   push:
   pull_request:
   workflow_dispatch:
+
 jobs:
   test:
-    name: Test
+    name: test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
       - name: Cache pnpm modules
         uses: actions/cache@v4
         with:
@@ -16,21 +20,24 @@ jobs:
           key: ${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-
-      - uses: pnpm/action-setup@v3.0.0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
         with:
           version: latest
           run_install: true
-      - name: Use Node.js 18.x
-        uses: actions/setup-node@v4.0.2
+
+      - name: Use Node.js 18
+        uses: actions/setup-node@v4
         with:
-          node-version: 18.x
+          node-version: 18
           cache: 'pnpm'
-      - name: Run Test
-        run: pnpm test
+
       - name: Generate coverage reports
         run: pnpm coverage
+
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v4.0.1
+        uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: yuta-nishi/url-copy
