@@ -6,7 +6,7 @@ import plasmoCssPaths from './src/plugins/plasmo-css-paths';
 export default defineConfig({
   plugins: [tsconfigPaths(), plasmoCssPaths()],
   test: {
-    include: ['src/**/*.test.{ts,tsx}'],
+    include: ['./src/**/*.test.{ts,tsx}', './tests/**/*.test.{ts,tsx}'],
     globals: true,
     environment: 'happy-dom',
     setupFiles: './vitest.setup.ts',
