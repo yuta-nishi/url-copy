@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { Icons } from '~/components/icons';
+import { AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert';
 import { getMissingShortcuts } from '~/lib/utils';
 import '~/style.css';
@@ -19,7 +19,7 @@ const Options = () => {
     <>
       {missingShortcuts.length > 0 ? (
         <Alert>
-          <Icons.alert_circle className="mt-[6px] h-4 w-4" />
+          <AlertCircle className="mt-[6px] h-4 w-4" />
           <AlertTitle>
             <h1 className="text-lg">Shortcut Conflict!</h1>
           </AlertTitle>
@@ -39,7 +39,7 @@ const Options = () => {
       ) : (
         <Alert>
           <AlertTitle className="flex items-center gap-3">
-            <Icons.check_circle className="h-4 w-4" />
+            <CheckCircle2 className="h-4 w-4" />
             <h1 className="text-lg">No Shortcut Conflict!</h1>
           </AlertTitle>
         </Alert>
