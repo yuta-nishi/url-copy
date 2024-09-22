@@ -38,4 +38,4 @@ Chrome extension to copy the current URL to the clipboard. \
 
 * URL Decoding
 
-[Demo Video](https://www.youtube.com/watch?v=m7AEzk4cKF0)
+![demo](./assets/demo.webp)
