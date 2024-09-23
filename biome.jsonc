@@ -1,0 +1,76 @@
+{
+	"$schema": "https://biomejs.dev/schemas/1.9.2/schema.json",
+	"organizeImports": {
+		"enabled": true
+	},
+	"files": {
+		"include": [
+			"./*.js",
+			"./*.jsx",
+			"./*.ts",
+			"./*.tsx",
+			"./src/**/*.js",
+			"./src/**/*.jsx",
+			"./src/**/*.ts",
+			"./src/**/*.tsx"
+		],
+		"ignore": [
+			"./node_modules/*",
+			"./build/*",
+			"./coverage/*",
+			"./.plasmo/*",
+			"./src/components/ui/*"
+		]
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"all": true,
+			"complexity": {
+				"noBannedTypes": "off"
+			},
+			"correctness": {
+				"noUndeclaredDependencies": "off", // https://github.com/biomejs/biome/issues/3874
+				"useImportExtensions": "off"
+			},
+			"style": {
+				"noDefaultExport": "off",
+				"noNonNullAssertion": "off",
+				"useNamingConvention": "off"
+			},
+			"suspicious": {
+				"noConsole": "off",
+				"noConsoleLog": "info",
+				"noExplicitAny": "info",
+				"noReactSpecificProps": "off" // Use React
+			},
+			"nursery": {
+				"useSortedClasses": "error"
+			}
+		}
+	},
+	"formatter": {
+		"enabled": true,
+		"formatWithErrors": false,
+		"ignore": [],
+		"indentStyle": "space",
+		"indentWidth": 2,
+		"lineWidth": 90
+	},
+	"javascript": {
+		"globals": [
+			"chrome",
+			"JSX"
+		],
+		"formatter": {
+			"indentStyle": "space",
+			"jsxQuoteStyle": "double",
+			"quoteStyle": "single"
+		}
+	},
+	"json": {
+		"formatter": {
+			"enabled": false
+		}
+	}
+}
