@@ -1,3 +1,5 @@
+
+
 <div align="center">
   <img src="assets/icon.png" alt="URL Copy" width="100px">
   <h1 style="color: hsl(, 100%, 50%);">URL Copy</h1>
@@ -33,9 +35,7 @@ Chrome extension to copy the current URL to the clipboard. \
 
 ### Options
 
-* Remove query parameters
-  * amazon.co.jp
-
+* Remove query parameters from `amazon.co.jp` links
 * URL Decoding
 
 ![demo](./assets/demo.webp)
